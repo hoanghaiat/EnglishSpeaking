@@ -1,0 +1,93 @@
+# English Speaking Practice
+
+An application for practicing English speaking skills with structured lessons and progress tracking.
+
+## Features
+
+- Role-based access (Admin, Teacher, Student, Parent)
+- Lesson management system (Course > Chapter > Lesson > Exercise)
+- Speaking practice with attempt tracking
+- Dashboard for each user role
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- pip
+
+### Installation
+
+1. Clone the repository
+2. Create a virtual environment: `python -m venv venv`
+3. Activate the virtual environment:
+   - On Windows: `venv\Scripts\activate`
+   - On macOS/Linux: `source venv/bin/activate`
+4. Install dependencies: `pip install -r requirements.txt`
+5. Copy `.env.example` to `.env` and configure your settings
+6. Run migrations: `python manage.py migrate`
+7. Create a superuser: `python manage.py createsuperuser`
+8. Run the development server: `python manage.py runserver`
+
+### Usage
+
+1. Visit `http://localhost:8000/` to access the application
+2. Login with your credentials
+3. Access different dashboards based on your role:
+   - Admin dashboard for managing users and content
+   - Teacher dashboard for managing students and lessons
+   - Student dashboard for accessing lessons and practicing speaking
+   - Parent dashboard for viewing children's progress
+
+## Project Structure
+
+- `speaking_practice/` - Main application directory
+  - `models.py` - Database models
+  - `admin.py` - Django admin configuration
+  - `views.py` - View functions
+  - `urls.py` - URL routing
+  - `templates/` - HTML templates
+  - `static/` - Static files (CSS, JS, images)
+  - `management/` - Custom management commands
+
+## Models
+
+The application includes the following models:
+- User (customized with role field)
+- TeacherProfile
+- StudentProfile
+- ParentProfile
+- StudentParent (many-to-many relationship between students and parents)
+- Course
+- Chapter
+- Lesson
+- Exercise
+- TeacherStudent (many-to-many relationship between teachers and students)
+- SpeakingAttempt
+
+## Admin Interface
+
+The Django admin interface is available at `/admin/` where you can manage:
+- Users
+- Profiles
+- Courses
+- Lessons
+- Exercises
+- Relationships between users
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- Bootstrap for CSS framework
+- Django for web framework
