@@ -14,11 +14,15 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            messages.success(request, 'Login successful!')
-            return redirect('dashboard')
-
-        messages.error(request, 'Invalid username or password.')
+            # Ensure the user is active before logging in
+            if user.is_active:
+                login(request, user)
+                messages.success(request, 'Login successful!')
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Account is disabled.')
+        else:
+            messages.error(request, 'Invalid username or password.')
 
     return render(request, 'registration/login.html')
 
