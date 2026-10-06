@@ -111,6 +111,7 @@ class Lesson(models.Model):
     A lesson within a chapter.
     """
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='lessons')
+    teacher = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField()
@@ -161,6 +162,20 @@ class TeacherStudent(models.Model):
 
     def __str__(self):
         return f"{self.teacher.user.username} - {self.student.user.username}"
+
+class StudentLesson(models.Model):
+    """
+    Through model to link students and lessons.
+    """
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='assigned_lessons')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='assigned_students')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'lesson')
+
+    def __str__(self):
+        return f"{self.student.user.username} - {self.lesson.title}"
 
 class SpeakingAttempt(models.Model):
     """

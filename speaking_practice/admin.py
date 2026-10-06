@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     User, TeacherProfile, StudentProfile, ParentProfile,
     StudentParent, Course, Chapter, Lesson, Exercise,
-    TeacherStudent, SpeakingAttempt
+    TeacherStudent, SpeakingAttempt, StudentLesson
 )
 
 class CustomUserAdmin(UserAdmin):
@@ -51,8 +51,8 @@ class ChapterAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ('title', 'chapter', 'order', 'is_active')
-    list_filter = ('chapter', 'is_active', 'created_at')
+    list_display = ('title', 'teacher', 'chapter', 'order', 'is_active')
+    list_filter = ('teacher', 'chapter', 'is_active', 'created_at')
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
@@ -62,6 +62,11 @@ class ExerciseAdmin(admin.ModelAdmin):
 @admin.register(TeacherStudent)
 class TeacherStudentAdmin(admin.ModelAdmin):
     list_display = ('teacher', 'student', 'assigned_at')
+    list_filter = ('assigned_at',)
+
+@admin.register(StudentLesson)
+class StudentLessonAdmin(admin.ModelAdmin):
+    list_display = ('student', 'lesson', 'assigned_at')
     list_filter = ('assigned_at',)
 
 @admin.register(SpeakingAttempt)

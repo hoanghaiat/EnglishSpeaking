@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from .models import StudentProfile, TeacherProfile, ParentProfile
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -41,8 +42,15 @@ def signup(request):
 
             if role in ['student', 'teacher', 'parent']:
                 user.role = role
+                user.save()
 
-            user.save()
+                # Create appropriate profile based on role
+                if role == 'student':
+                    StudentProfile.objects.create(user=user)
+                elif role == 'teacher':
+                    TeacherProfile.objects.create(user=user)
+                elif role == 'parent':
+                    ParentProfile.objects.create(user=user)
 
             login(request, user)
             messages.success(request, 'Account created successfully!')
