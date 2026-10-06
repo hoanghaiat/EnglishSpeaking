@@ -1,23 +1,53 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'Login successful!')
+            return redirect('dashboard')
+
+        messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'registration/login.html')
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('login')
+
 def signup(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
+
         if form.is_valid():
             user = form.save()
-            # Set the role based on what was selected in the form
+
+            user.email = request.POST.get('email', '').strip()
             role = request.POST.get('role')
-            if role:
+
+            if role in ['student', 'teacher', 'parent']:
                 user.role = role
-                user.save()
-            
+
+            user.save()
+
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('dashboard')
     else:
         form = UserCreationForm()
-    
+
     return render(request, 'registration/signup.html', {'form': form})
