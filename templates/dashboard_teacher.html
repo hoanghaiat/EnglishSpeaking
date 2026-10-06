@@ -1,28 +1,76 @@
 {% extends 'base.html' %}
 
+{% block title %}Teacher Dashboard{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2>Teacher Dashboard</h2>
-        
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <h3>Assigned Students</h3>
-                {% if students %}
-                    <ul class="list-group">
-                        {% for student in students %}
-                            <li class="list-group-item">{{ student.user.username }}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>No students assigned to you.</p>
-                {% endif %}
+<div class="container">
+    <h2>Teacher Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Students</h5>
+                    <p class="card-text">{{ students.count }} students assigned to you</p>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h3>Available Lessons</h3>
-                <p>Lesson management will be available here.</p>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Lessons</h5>
+                    <p class="card-text">{{ lessons.count }} lessons assigned to you</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    <a href="{% url 'teacher_create_lesson' %}" class="btn btn-primary">Create New Lesson</a>
+                </div>
             </div>
         </div>
     </div>
+    
+    <h3>My Students</h3>
+    {% if students %}
+        <div class="row">
+            {% for student in students %}
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ student.user.first_name }} {{ student.user.last_name }}</h5>
+                            <p class="card-text">Email: {{ student.user.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No students assigned to you.</p>
+    {% endif %}
+    
+    <h3>My Lessons</h3>
+    {% if lessons %}
+        <div class="row">
+            {% for lesson in lessons %}
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ lesson.title }}</h5>
+                            <p class="card-text">{{ lesson.description }}</p>
+                            <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-primary">View Lesson</a>
+                            <a href="{% url 'teacher_edit_lesson' lesson.id %}" class="btn btn-secondary">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No lessons assigned to you.</p>
+    {% endif %}
 </div>
 {% endblock %}

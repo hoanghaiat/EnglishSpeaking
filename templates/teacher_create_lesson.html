@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Lesson{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create New Lesson</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="chapter">Chapter:</label>
+                    <select class="form-control" id="chapter" name="chapter" required>
+                        <option value="">Select a chapter</option>
+                        {% for chapter in chapters %}
+                            <option value="{{ chapter.id }}">{{ chapter.title }} - {{ chapter.course.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Create Lesson</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

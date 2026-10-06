@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Lesson{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Delete Lesson</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <p>Are you sure you want to delete the lesson "{{ lesson.title }}"?</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <button type="submit" class="btn btn-danger">Delete Lesson</button>
+                <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

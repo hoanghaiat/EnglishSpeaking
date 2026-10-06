@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponseForbidden
 from .models import (
     User, StudentProfile, TeacherProfile, ParentProfile,
-    StudentLesson, Lesson, Exercise, SpeakingAttempt
+    StudentLesson, Lesson, Exercise, SpeakingAttempt, Chapter
 )
 
 @login_required
@@ -149,3 +150,105 @@ def create_speaking_attempt(request, exercise_id):
     else:
         messages.error(request, 'You do not have permission to create speaking attempts.')
         return redirect('dashboard')
+
+@login_required
+def teacher_create_lesson(request):
+    user = request.user
+    
+    # Only teachers can create lessons
+    if user.role != 'teacher':
+        messages.error(request, 'You do not have permission to create lessons.')
+        return redirect('dashboard')
+    
+    teacher_profile = user.teacher_profile
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        chapter_id = request.POST.get('chapter')
+        
+        # Validate that the chapter belongs to this teacher
+        try:
+            chapter = Chapter.objects.get(id=chapter_id)
+            if chapter.course.teacher != teacher_profile:
+                messages.error(request, 'You do not have permission to create lessons in this chapter.')
+                return redirect('dashboard')
+        except Chapter.DoesNotExist:
+            messages.error(request, 'Invalid chapter selected.')
+            return redirect('dashboard')
+        
+        lesson = Lesson.objects.create(
+            title=title,
+            description=description,
+            teacher=teacher_profile,
+            chapter=chapter
+        )
+        
+        messages.success(request, 'Lesson created successfully!')
+        return redirect('lesson_detail', lesson_id=lesson.id)
+    
+    # Get chapters that belong to this teacher's courses
+    chapters = Chapter.objects.filter(course__teacher=teacher_profile).select_related('course')
+    
+    context = {
+        'chapters': chapters
+    }
+    return render(request, 'teacher_create_lesson.html', context)
+
+@login_required
+def teacher_edit_lesson(request, lesson_id):
+    user = request.user
+    
+    # Only teachers can edit lessons
+    if user.role != 'teacher':
+        messages.error(request, 'You do not have permission to edit lessons.')
+        return redirect('dashboard')
+    
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    # Check that this teacher owns the lesson
+    if lesson.teacher != user.teacher_profile:
+        messages.error(request, 'You do not have permission to edit this lesson.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        
+        lesson.title = title
+        lesson.description = description
+        lesson.save()
+        
+        messages.success(request, 'Lesson updated successfully!')
+        return redirect('lesson_detail', lesson_id=lesson.id)
+    
+    context = {
+        'lesson': lesson
+    }
+    return render(request, 'teacher_edit_lesson.html', context)
+
+@login_required
+def teacher_delete_lesson(request, lesson_id):
+    user = request.user
+    
+    # Only teachers can delete lessons
+    if user.role != 'teacher':
+        messages.error(request, 'You do not have permission to delete lessons.')
+        return redirect('dashboard')
+    
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    # Check that this teacher owns the lesson
+    if lesson.teacher != user.teacher_profile:
+        messages.error(request, 'You do not have permission to delete this lesson.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        lesson.delete()
+        messages.success(request, 'Lesson deleted successfully!')
+        return redirect('lesson_list')
+    
+    context = {
+        'lesson': lesson
+    }
+    return render(request, 'teacher_delete_lesson.html', context)

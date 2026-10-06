@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Speaking Attempt{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create Speaking Attempt</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ exercise.title }}</h5>
+            <p class="card-text">{{ exercise.description }}</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="transcript">Transcript:</label>
+                    <textarea class="form-control" id="transcript" name="transcript" rows="5" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback">Feedback (optional):</label>
+                    <textarea class="form-control" id="feedback" name="feedback" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Submit Attempt</button>
+                <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

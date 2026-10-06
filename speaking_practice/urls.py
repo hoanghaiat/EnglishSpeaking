@@ -8,6 +8,12 @@ urlpatterns = [
     path('lessons/', views.lesson_list, name='lesson_list'),
     path('lesson/<int:lesson_id>/', views.lesson_detail, name='lesson_detail'),
     path('lesson/<int:lesson_id>/attempt/<int:exercise_id>/', views.create_speaking_attempt, name='create_speaking_attempt'),
+    
+    # Teacher lesson management URLs
+    path('teacher/lesson/create/', views.teacher_create_lesson, name='teacher_create_lesson'),
+    path('teacher/lesson/<int:lesson_id>/edit/', views.teacher_edit_lesson, name='teacher_edit_lesson'),
+    path('teacher/lesson/<int:lesson_id>/delete/', views.teacher_delete_lesson, name='teacher_delete_lesson'),
+    
     path('profile/', views.profile, name='profile'),
 
     path('accounts/login/', views_auth.login_view, name='login'),
