@@ -38,3 +38,7 @@ media/
 # IDE
 .vscode/
 .idea/
+.aider*
+
+.venv/
+.ai-agent/
