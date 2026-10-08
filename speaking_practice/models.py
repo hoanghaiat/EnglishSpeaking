@@ -111,7 +111,13 @@ class Lesson(models.Model):
     A lesson within a chapter.
     """
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='lessons')
-    teacher = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE, related_name='lessons')
+    teacher = models.ForeignKey(
+        TeacherProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lessons'
+    )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField()
