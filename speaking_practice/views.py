@@ -44,7 +44,9 @@ def dashboard(request):
         if teacher_profile is None:
             messages.error(request, 'Teacher profile not found. Please contact an administrator.')
             return redirect('home')
-        students = teacher_profile.assigned_students.all()
+        students = StudentProfile.objects.filter(
+            assigned_teachers__teacher=teacher_profile
+        ).distinct()
         lessons = teacher_profile.lessons.all()
         return render(request, 'dashboard_teacher.html', {'students': students, 'lessons': lessons})
 

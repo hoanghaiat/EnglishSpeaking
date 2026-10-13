@@ -42,7 +42,7 @@
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">{{ student.user.first_name }} {{ student.user.last_name }}</h5>
+                            <h5 class="card-title">{{ student.user.get_full_name|default:student.user.username }}</h5>
                             <p class="card-text">Email: {{ student.user.email }}</p>
                         </div>
                     </div>
