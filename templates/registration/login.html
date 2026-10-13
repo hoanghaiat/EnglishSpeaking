@@ -1,28 +1,35 @@
 {% extends 'base.html' %}
 
+{% block title %}Log in{% endblock %}
+
 {% block content %}
 <div class="row">
-    <div class="col-md-6 mx-auto">
-        <h2>Login</h2>
-        
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+    <div class="col-md-6 col-lg-5 mx-auto">
+        <div class="card esp-card">
+            <div class="card-body p-4">
+                <h2 class="card-title">&#127908; Welcome back!</h2>
+                <p class="text-muted">Log in to continue your speaking practice.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required autocomplete="username">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Log in &amp; Practice</button>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <p class="mb-0">New here? <a href="{% url 'signup' %}">Create a free account</a></p>
+                </div>
             </div>
-            
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-        
-        <div class="mt-3">
-            <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
         </div>
     </div>
 </div>

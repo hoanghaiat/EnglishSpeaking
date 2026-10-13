@@ -1,45 +1,46 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Lesson{% endblock %}
+{% block title %}Create a Speaking Lesson{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h2>Create New Lesson</h2>
+    <h2>&#10133; Create a Speaking Lesson</h2>
+    <p class="text-muted">Design a lesson your students will speak through, exercise by exercise.</p>
 
-    <div class="card">
+    <div class="card esp-card">
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
 
-                <div class="form-group mb-3">
-                    <label for="title" class="form-label">Title:</label>
-                    <input type="text" class="form-control" id="title" name="title" required value="{{ form_title|default:'' }}">
+                <div class="mb-3">
+                    <label for="title" class="form-label"><strong>Lesson title</strong></label>
+                    <input type="text" class="form-control" id="title" name="title" required maxlength="200" value="{{ form_title|default:'' }}" placeholder="e.g. Greetings and introductions">
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="description" class="form-label">Description:</label>
-                    <textarea class="form-control" id="description" name="description" rows="3">{{ form_description|default:'' }}</textarea>
+                <div class="mb-3">
+                    <label for="description" class="form-label"><strong>Description</strong></label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="What will students practice in this lesson?">{{ form_description|default:'' }}</textarea>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="chapter" class="form-label">Chapter:</label>
-                    <select class="form-control" id="chapter" name="chapter" required>
+                <div class="mb-3">
+                    <label for="chapter" class="form-label"><strong>Chapter</strong></label>
+                    <select class="form-select" id="chapter" name="chapter" required>
                         <option value="">Select a chapter</option>
                         {% for chapter in chapters %}
                             <option value="{{ chapter.id }}" {% if form_chapter_id == chapter.id|stringformat:"s" %}selected{% endif %}>
-                                {{ chapter.title }} - {{ chapter.course.title }}
+                                {{ chapter.course.title }} &rsaquo; {{ chapter.title }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="order" class="form-label">Order (optional, auto-assigned if blank):</label>
+                <div class="mb-3">
+                    <label for="order" class="form-label"><strong>Order</strong> <span class="text-muted">(optional &mdash; auto-assigned if left blank)</span></label>
                     <input type="number" class="form-control" id="order" name="order" min="1" value="{{ form_order|default:'' }}">
                 </div>
 
-                <button type="submit" class="btn btn-primary">Create Lesson</button>
-                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">&#10003; Create Lesson</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
             </form>
         </div>
     </div>

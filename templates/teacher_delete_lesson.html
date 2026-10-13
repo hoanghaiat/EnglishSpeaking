@@ -1,21 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Lesson{% endblock %}
+{% block title %}Delete Speaking Lesson{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h2>Delete Lesson</h2>
-    
-    <div class="card">
-        <div class="card-body">
-            <p>Are you sure you want to delete the lesson "{{ lesson.title }}"?</p>
-            
-            <form method="post">
-                {% csrf_token %}
-                
-                <button type="submit" class="btn btn-danger">Delete Lesson</button>
-                <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-secondary">Cancel</a>
-            </form>
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h2>&#128465; Delete Speaking Lesson</h2>
+
+            <div class="card esp-card border-danger">
+                <div class="card-body">
+                    <p>Are you sure you want to permanently delete the speaking lesson <strong>"{{ lesson.title }}"</strong>?</p>
+                    <p class="text-muted mb-0">This will also remove its exercises and student practice attempts. This cannot be undone.</p>
+
+                    <form method="post" class="mt-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">&#128465; Yes, Delete Lesson</button>
+                        <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-outline-secondary">Keep It</a>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

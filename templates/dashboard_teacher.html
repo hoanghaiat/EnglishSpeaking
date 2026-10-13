@@ -4,73 +4,77 @@
 
 {% block content %}
 <div class="container">
-    <h2>Teacher Dashboard</h2>
-    
-    <div class="row">
+    <h2>&#127979; Teacher Dashboard</h2>
+    <p class="text-muted">Welcome back, {{ user.username }}! Create speaking lessons and guide your students' practice.</p>
+
+    <div class="row g-4">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card esp-card text-white bg-primary mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Students</h5>
-                    <p class="card-text">{{ students.count }} students assigned to you</p>
+                    <h5 class="card-title">&#128101; My Students</h5>
+                    <p class="card-text esp-stat mb-0">{{ students.count }}</p>
+                    <small>students learning with you</small>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
-            <div class="card">
+            <div class="card esp-card text-white bg-success mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Lessons</h5>
-                    <p class="card-text">{{ lessons.count }} lessons assigned to you</p>
+                    <h5 class="card-title">&#127908; Speaking Lessons</h5>
+                    <p class="card-text esp-stat mb-0">{{ lessons.count }}</p>
+                    <small>lessons you created</small>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
-            <div class="card">
+            <div class="card esp-card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Actions</h5>
-                    <a href="{% url 'teacher_create_lesson' %}" class="btn btn-primary">Create New Lesson</a>
+                    <h5 class="card-title">&#10133; Quick Action</h5>
+                    <p class="card-text text-muted">Design a new speaking lesson for your students.</p>
+                    <a href="{% url 'teacher_create_lesson' %}" class="btn btn-primary">&#10133; New Speaking Lesson</a>
                 </div>
             </div>
         </div>
     </div>
-    
-    <h3>My Students</h3>
+
+    <h3 class="mt-4">My Students</h3>
     {% if students %}
-        <div class="row">
+        <div class="row g-3">
             {% for student in students %}
                 <div class="col-md-4">
-                    <div class="card">
+                    <div class="card esp-card esp-card-hover">
                         <div class="card-body">
                             <h5 class="card-title">{{ student.user.get_full_name|default:student.user.username }}</h5>
-                            <p class="card-text">Email: {{ student.user.email }}</p>
+                            <p class="card-text text-muted mb-0">{{ student.user.email|default:"No email" }}</p>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>No students assigned to you.</p>
+        <p class="text-muted">No students assigned to you yet.</p>
     {% endif %}
-    
-    <h3>My Lessons</h3>
+
+    <h3 class="mt-4">My Speaking Lessons</h3>
     {% if lessons %}
-        <div class="row">
+        <div class="row g-3">
             {% for lesson in lessons %}
                 <div class="col-md-4">
-                    <div class="card">
+                    <div class="card esp-card esp-card-hover">
                         <div class="card-body">
                             <h5 class="card-title">{{ lesson.title }}</h5>
-                            <p class="card-text">{{ lesson.description }}</p>
-                            <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-primary">View Lesson</a>
-                            <a href="{% url 'teacher_edit_lesson' lesson.id %}" class="btn btn-secondary">Edit</a>
+                            <p class="card-text text-muted">{{ lesson.description|default:"No description yet."|truncatewords:15 }}</p>
+                            <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-sm btn-primary">View Lesson</a>
+                            <a href="{% url 'teacher_edit_lesson' lesson.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>No lessons assigned to you.</p>
+        <p class="text-muted">You haven't created any speaking lessons yet. <a href="{% url 'teacher_create_lesson' %}">Create your first lesson</a>.</p>
     {% endif %}
 </div>
 {% endblock %}

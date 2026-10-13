@@ -7,13 +7,16 @@
     <div class="col-md-12">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'lesson_list' %}">Lessons</a></li>
-                <li class="breadcrumb-item active">{{ lesson.title }}</li>
+                <li class="breadcrumb-item"><a href="{% url 'lesson_list' %}">Speaking Lessons</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ lesson.title }}</li>
             </ol>
         </nav>
 
-        <div class="d-flex justify-content-between align-items-center">
-            <h2>{{ lesson.title }}</h2>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2>{{ lesson.title }}</h2>
+                <p class="text-muted mb-0">{{ lesson.chapter.course.title }} &rsaquo; {{ lesson.chapter.title }}</p>
+            </div>
             {% if user.role == 'teacher' and lesson.teacher and lesson.teacher.user == user %}
                 <div>
                     <a href="{% url 'teacher_edit_lesson' lesson.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -21,35 +24,35 @@
                 </div>
             {% endif %}
         </div>
-        <p class="text-muted">{{ lesson.chapter.course.title }} &rsaquo; {{ lesson.chapter.title }}</p>
         {% if lesson.description %}
-            <p>{{ lesson.description }}</p>
+            <p class="mt-3">{{ lesson.description }}</p>
         {% endif %}
 
-        <h4 class="mt-4">Exercises</h4>
+        <h4 class="mt-4">&#128483; Speaking Exercises</h4>
+        <p class="text-muted">Read each prompt, then say it out loud with confidence.</p>
         {% if exercises %}
             <div class="list-group">
                 {% for exercise in exercises %}
                     <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div class="d-flex w-100 justify-content-between align-items-center gap-3">
                             <div>
                                 <h5 class="mb-1">{{ exercise.order }}. {{ exercise.title }}</h5>
                                 {% if exercise.instructions %}
                                     <p class="mb-1"><strong>Instructions:</strong> {{ exercise.instructions }}</p>
                                 {% endif %}
                                 {% if exercise.expected_text %}
-                                    <p class="mb-1 text-muted"><em>Say: "{{ exercise.expected_text|truncatewords:25 }}"</em></p>
+                                    <p class="mb-1 text-muted"><em>&#128483; Say it out loud: "{{ exercise.expected_text|truncatewords:25 }}"</em></p>
                                 {% endif %}
                             </div>
                             {% if user.role == 'student' %}
-                                <a href="{% url 'create_speaking_attempt' lesson.id exercise.id %}" class="btn btn-sm btn-success">Practice</a>
+                                <a href="{% url 'create_speaking_attempt' lesson.id exercise.id %}" class="btn btn-sm btn-success text-nowrap">&#127908; Practice</a>
                             {% endif %}
                         </div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="alert alert-info">No exercises in this lesson yet.</div>
+            <div class="alert alert-info">No speaking exercises in this lesson yet.</div>
         {% endif %}
     </div>
 </div>

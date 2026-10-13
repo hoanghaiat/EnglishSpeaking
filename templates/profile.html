@@ -1,18 +1,27 @@
 {% extends 'base.html' %}
 
+{% block title %}My Profile{% endblock %}
+
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
-        <h2>User Profile</h2>
-        
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <p><strong>Username:</strong> {{ user.username }}</p>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Role:</strong> {{ user.role }}</p>
+    <div class="col-md-8 mx-auto">
+        <h2>&#128100; My Profile</h2>
+
+        <div class="card esp-card mt-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 1.75rem;" aria-hidden="true">&#128100;</div>
+                    <div>
+                        <h4 class="mb-0">{{ user.username }}</h4>
+                        <span class="badge bg-primary text-capitalize">{{ user.role }}</span>
+                    </div>
+                </div>
+                <hr>
+                <p class="mb-2"><strong>Email:</strong> {{ user.email|default:"&mdash;" }}</p>
                 {% if user.phone_number %}
-                    <p><strong>Phone:</strong> {{ user.phone_number }}</p>
+                    <p class="mb-2"><strong>Phone:</strong> {{ user.phone_number }}</p>
                 {% endif %}
+                <p class="mb-0 text-muted">Keep practicing &mdash; every day counts! &#127908;</p>
             </div>
         </div>
     </div>

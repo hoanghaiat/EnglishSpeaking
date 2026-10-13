@@ -3,14 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Speaking Practice</title>
+    <title>{% block title %}Practice Speaking Every Day{% endblock %} &middot; English Speaking Practice</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --esp-indigo: #4338ca;
+            --esp-blue: #2563eb;
+            --esp-cyan: #06b6d4;
+        }
+        body { background-color: #f8fafc; }
+        .esp-navbar { background: linear-gradient(90deg, var(--esp-indigo), var(--esp-blue)); }
+        .esp-brand { font-weight: 700; letter-spacing: .2px; }
+        .esp-hero {
+            background: linear-gradient(135deg, var(--esp-indigo) 0%, var(--esp-blue) 60%, var(--esp-cyan) 100%);
+            color: #fff;
+            border-radius: 1rem;
+        }
+        .esp-card {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 .25rem .75rem rgba(15, 23, 42, .08);
+        }
+        .esp-card-hover { transition: transform .15s ease, box-shadow .15s ease; }
+        .esp-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .5rem 1.25rem rgba(15, 23, 42, .12);
+        }
+        .esp-stat { font-size: 2rem; font-weight: 700; }
+        .esp-footer { background: #1e1b4b; color: #c7d2fe; }
+        .esp-footer a { color: #e0e7ff; text-decoration: none; }
+        .esp-footer a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark esp-navbar sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">English Speaking Practice</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand esp-brand" href="{% url 'home' %}">&#127908; English Speaking Practice</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -20,24 +49,27 @@
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                            <a class="nav-link" href="{% url 'dashboard' %}">My Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'lesson_list' %}">Lessons</a>
+                            <a class="nav-link" href="{% url 'lesson_list' %}">Speaking Lessons</a>
                         </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+                            <a class="nav-link" href="{% url 'profile' %}">My Profile</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                            <a class="nav-link" href="{% url 'logout' %}">Log out</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                            <a class="nav-link" href="{% url 'login' %}">Log in</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" href="{% url 'signup' %}">Sign up free</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -45,19 +77,26 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <main class="container my-4">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
 
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
+
+    <footer class="esp-footer mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-1">&#127908; <strong>English Speaking Practice</strong> &mdash; speak a little every day.</p>
+            <p class="mb-0 small">Fluency grows one sentence at a time.</p>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

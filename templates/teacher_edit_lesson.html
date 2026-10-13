@@ -1,28 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Lesson{% endblock %}
+{% block title %}Edit Speaking Lesson{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h2>Edit Lesson</h2>
-    
-    <div class="card">
+    <h2>&#9999; Edit Speaking Lesson</h2>
+    <p class="text-muted">Update "{{ lesson.title }}" for your students.</p>
+
+    <div class="card esp-card">
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="title">Title:</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{ lesson.title }}" required>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label"><strong>Lesson title</strong></label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ lesson.title }}" required maxlength="200">
                 </div>
-                
-                <div class="form-group">
-                    <label for="description">Description:</label>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label"><strong>Description</strong></label>
                     <textarea class="form-control" id="description" name="description" rows="3">{{ lesson.description }}</textarea>
                 </div>
-                
-                <button type="submit" class="btn btn-primary">Update Lesson</button>
-                <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-secondary">Cancel</a>
+
+                <button type="submit" class="btn btn-primary">&#10003; Save Changes</button>
+                <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-outline-secondary">Cancel</a>
             </form>
         </div>
     </div>

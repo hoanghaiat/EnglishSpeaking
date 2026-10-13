@@ -1,19 +1,67 @@
 {% extends 'base.html' %}
 
+{% block title %}Speak English with Confidence{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto text-center">
-        <h1 class="display-4">Welcome to English Speaking Practice</h1>
-        <p class="lead">Improve your English speaking skills with structured lessons and practice.</p>
-        
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
-        {% else %}
-            <div class="mt-4">
-                <a href="{% url 'login' %}" class="btn btn-success btn-lg me-2">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-outline-primary btn-lg">Sign Up</a>
+<div class="esp-hero p-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold">Speak English with Confidence</h1>
+            <p class="lead mb-4">Practice speaking every day with structured lessons, record your voice, and watch your fluency grow &mdash; one sentence at a time.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg me-2">&#127908; Continue Practicing</a>
+                <a href="{% url 'lesson_list' %}" class="btn btn-outline-light btn-lg">Browse Lessons</a>
+            {% else %}
+                <a href="{% url 'signup' %}" class="btn btn-light btn-lg me-2">Start Speaking Free</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Log in</a>
+            {% endif %}
+        </div>
+        <div class="col-lg-4 text-center d-none d-lg-block" style="font-size: 6rem;" aria-hidden="true">&#127908;</div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body text-center p-4">
+                <div style="font-size: 2.5rem;" aria-hidden="true">&#128483;</div>
+                <h5 class="card-title mt-2">Daily Speaking Practice</h5>
+                <p class="card-text text-muted">Record yourself speaking, write down what you said, and build a daily habit.</p>
             </div>
-        {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body text-center p-4">
+                <div style="font-size: 2.5rem;" aria-hidden="true">&#128218;</div>
+                <h5 class="card-title mt-2">Structured Lessons</h5>
+                <p class="card-text text-muted">Follow courses, chapters, and lessons designed by your teacher &mdash; step by step.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body text-center p-4">
+                <div style="font-size: 2.5rem;" aria-hidden="true">&#128202;</div>
+                <h5 class="card-title mt-2">Track Your Progress</h5>
+                <p class="card-text text-muted">Students, teachers, and parents each get a clear view of speaking progress.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card esp-card">
+            <div class="card-body p-4">
+                <h4 class="card-title">How it works</h4>
+                <ol class="mb-0">
+                    <li class="mb-2"><strong>Learn:</strong> open a lesson and read the speaking prompt &mdash; <em>say it out loud</em>.</li>
+                    <li class="mb-2"><strong>Record:</strong> record your voice and write down what you said.</li>
+                    <li><strong>Improve:</strong> review your attempts and keep practicing a little every day.</li>
+                </ol>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
