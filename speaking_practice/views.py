@@ -12,6 +12,10 @@ from .models import (
 # Max upload size for a recorded speaking attempt (20 MB)
 MAX_AUDIO_UPLOAD_BYTES = 20 * 1024 * 1024
 
+# Mirrors Lesson.title max_length; SQLite does not enforce varchar limits,
+# so validate server-side to stay compatible with PostgreSQL.
+MAX_TITLE_LENGTH = 200
+
 
 def _profile_or_none(user, relation):
     """Return user.<relation> or None when the profile does not exist."""
@@ -178,15 +182,19 @@ def create_speaking_attempt(request, lesson_id, exercise_id):
 
     if request.method == 'POST':
         audio_file = request.FILES.get('recorded_audio')
+        transcript = request.POST.get('transcript', '').strip()
         if audio_file and audio_file.size > MAX_AUDIO_UPLOAD_BYTES:
             messages.error(request, 'The audio file is too large (max 20 MB).')
+            return render(request, 'create_speaking_attempt.html', {'exercise': exercise, 'lesson': lesson})
+        if not transcript:
+            messages.error(request, 'Transcript is required.')
             return render(request, 'create_speaking_attempt.html', {'exercise': exercise, 'lesson': lesson})
 
         SpeakingAttempt.objects.create(
             student=student_profile,
             exercise=exercise,
             recorded_audio=audio_file,
-            transcript=request.POST.get('transcript', '').strip(),
+            transcript=transcript,
             feedback=request.POST.get('feedback', '').strip(),
         )
 
@@ -233,6 +241,8 @@ def teacher_create_lesson(request):
         order = None
         if not title:
             error = 'Title is required.'
+        elif len(title) > MAX_TITLE_LENGTH:
+            error = f'Title must be at most {MAX_TITLE_LENGTH} characters.'
         elif chapter is None:
             error = 'Please select a valid chapter.'
         elif order_raw:
@@ -302,6 +312,9 @@ def teacher_edit_lesson(request, lesson_id):
         title = request.POST.get('title', '').strip()
         if not title:
             messages.error(request, 'Title is required.')
+            return render(request, 'teacher_edit_lesson.html', {'lesson': lesson})
+        if len(title) > MAX_TITLE_LENGTH:
+            messages.error(request, f'Title must be at most {MAX_TITLE_LENGTH} characters.')
             return render(request, 'teacher_edit_lesson.html', {'lesson': lesson})
 
         lesson.title = title
