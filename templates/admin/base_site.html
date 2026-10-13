@@ -1,5 +1,19 @@
 {% extends "admin/base_site.html" %}
 
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        /* Group headers in the admin navigation (see ESPAdminSite.get_app_list). */
+        .esp-nav-group {
+            font-size: 11px !important;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            opacity: .7;
+            padding-top: 12px !important;
+        }
+    </style>
+{% endblock %}
+
 {% block extrahead %}
     {{ block.super }}
     <script>

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from .admin_site import esp_admin_site
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import (
     User, TeacherProfile, StudentProfile, ParentProfile,
@@ -36,59 +37,59 @@ class CustomUserAdmin(UserAdmin):
         ('Role', {'fields': ('role',)}),
     )
 
-admin.site.register(User, CustomUserAdmin)
+esp_admin_site.register(User, CustomUserAdmin)
 
-@admin.register(TeacherProfile)
+@admin.register(TeacherProfile, site=esp_admin_site)
 class TeacherProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'created_at')
     search_fields = ('user__username', 'user__email')
 
-@admin.register(StudentProfile)
+@admin.register(StudentProfile, site=esp_admin_site)
 class StudentProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'grade_level', 'created_at')
     search_fields = ('user__username', 'user__email')
 
-@admin.register(ParentProfile)
+@admin.register(ParentProfile, site=esp_admin_site)
 class ParentProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'created_at')
     search_fields = ('user__username', 'user__email')
 
-@admin.register(StudentParent)
+@admin.register(StudentParent, site=esp_admin_site)
 class StudentParentAdmin(admin.ModelAdmin):
     list_display = ('student', 'parent', 'relationship_type')
     list_filter = ('relationship_type',)
 
-@admin.register(Course)
+@admin.register(Course, site=esp_admin_site)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at')
 
-@admin.register(Chapter)
+@admin.register(Chapter, site=esp_admin_site)
 class ChapterAdmin(admin.ModelAdmin):
     list_display = ('title', 'course', 'order', 'is_active')
     list_filter = ('course', 'is_active', 'created_at')
 
-@admin.register(Lesson)
+@admin.register(Lesson, site=esp_admin_site)
 class LessonAdmin(admin.ModelAdmin):
     list_display = ('title', 'teacher', 'chapter', 'order', 'is_active')
     list_filter = ('teacher', 'chapter', 'is_active', 'created_at')
 
-@admin.register(Exercise)
+@admin.register(Exercise, site=esp_admin_site)
 class ExerciseAdmin(admin.ModelAdmin):
     list_display = ('title', 'lesson', 'order', 'is_active')
     list_filter = ('lesson', 'is_active', 'created_at')
 
-@admin.register(TeacherStudent)
+@admin.register(TeacherStudent, site=esp_admin_site)
 class TeacherStudentAdmin(admin.ModelAdmin):
     list_display = ('teacher', 'student', 'assigned_at')
     list_filter = ('assigned_at',)
 
-@admin.register(StudentLesson)
+@admin.register(StudentLesson, site=esp_admin_site)
 class StudentLessonAdmin(admin.ModelAdmin):
     list_display = ('student', 'lesson', 'assigned_at')
     list_filter = ('assigned_at',)
 
-@admin.register(SpeakingAttempt)
+@admin.register(SpeakingAttempt, site=esp_admin_site)
 class SpeakingAttemptAdmin(admin.ModelAdmin):
     list_display = ('student', 'exercise', 'created_at')
     list_filter = ('created_at',)
