@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import (
     User, TeacherProfile, StudentProfile, ParentProfile,
     StudentParent, Course, Chapter, Lesson, Exercise,
@@ -10,11 +11,20 @@ class CustomUserAdmin(UserAdmin):
     """
     Custom admin for the User model.
     """
+    # Use forms bound to the custom User model; Django's default
+    # UserCreationForm/UserChangeForm target auth.User and break
+    # with a custom AUTH_USER_MODEL.
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
     list_display = ('username', 'email', 'role', 'is_staff')
     list_filter = ('role', 'is_staff', 'is_superuser', 'is_active')
     fieldsets = UserAdmin.fieldsets + (
         ('Role', {'fields': ('role',)}),
         ('Additional Info', {'fields': ('phone_number',)}),
+    )
+    # Include role on the "add user" page so new users are never role-less.
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Role', {'fields': ('role',)}),
     )
 
 admin.site.register(User, CustomUserAdmin)

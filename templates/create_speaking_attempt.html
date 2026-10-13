@@ -1,29 +1,54 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Speaking Attempt{% endblock %}
+{% block title %}Practice: {{ exercise.title }}{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h2>Create Speaking Attempt</h2>
-    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'lesson_detail' lesson.id %}">{{ lesson.title }}</a></li>
+            <li class="breadcrumb-item active">Practice</li>
+        </ol>
+    </nav>
+
+    <h2>Practice: {{ exercise.title }}</h2>
+
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">{{ exercise.title }}</h5>
-            <p class="card-text">{{ exercise.description }}</p>
-            
-            <form method="post">
+            {% if exercise.description %}
+                <p class="card-text">{{ exercise.description }}</p>
+            {% endif %}
+            {% if exercise.instructions %}
+                <p class="card-text"><strong>Instructions:</strong> {{ exercise.instructions }}</p>
+            {% endif %}
+            {% if exercise.expected_text %}
+                <div class="alert alert-secondary"><em>Say: "{{ exercise.expected_text }}"</em></div>
+            {% endif %}
+            {% if exercise.reference_audio %}
+                <p class="card-text">
+                    <strong>Reference audio:</strong><br>
+                    <audio controls src="{{ exercise.reference_audio.url }}"></audio>
+                </p>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="transcript">Transcript:</label>
+
+                <div class="form-group mb-3">
+                    <label for="recorded_audio" class="form-label">Your recording (audio file, max 20 MB):</label>
+                    <input type="file" class="form-control" id="recorded_audio" name="recorded_audio" accept="audio/*">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="transcript" class="form-label">Transcript:</label>
                     <textarea class="form-control" id="transcript" name="transcript" rows="5" required></textarea>
                 </div>
-                
-                <div class="form-group">
-                    <label for="feedback">Feedback (optional):</label>
+
+                <div class="form-group mb-3">
+                    <label for="feedback" class="form-label">Feedback (optional):</label>
                     <textarea class="form-control" id="feedback" name="feedback" rows="3"></textarea>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary">Submit Attempt</button>
                 <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-secondary">Cancel</a>
             </form>

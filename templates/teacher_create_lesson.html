@@ -5,32 +5,39 @@
 {% block content %}
 <div class="container">
     <h2>Create New Lesson</h2>
-    
+
     <div class="card">
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="title">Title:</label>
-                    <input type="text" class="form-control" id="title" name="title" required>
+
+                <div class="form-group mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <input type="text" class="form-control" id="title" name="title" required value="{{ form_title|default:'' }}">
                 </div>
-                
-                <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ form_description|default:'' }}</textarea>
                 </div>
-                
-                <div class="form-group">
-                    <label for="chapter">Chapter:</label>
+
+                <div class="form-group mb-3">
+                    <label for="chapter" class="form-label">Chapter:</label>
                     <select class="form-control" id="chapter" name="chapter" required>
                         <option value="">Select a chapter</option>
                         {% for chapter in chapters %}
-                            <option value="{{ chapter.id }}">{{ chapter.title }} - {{ chapter.course.title }}</option>
+                            <option value="{{ chapter.id }}" {% if form_chapter_id == chapter.id|stringformat:"s" %}selected{% endif %}>
+                                {{ chapter.title }} - {{ chapter.course.title }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
-                
+
+                <div class="form-group mb-3">
+                    <label for="order" class="form-label">Order (optional, auto-assigned if blank):</label>
+                    <input type="number" class="form-control" id="order" name="order" min="1" value="{{ form_order|default:'' }}">
+                </div>
+
                 <button type="submit" class="btn btn-primary">Create Lesson</button>
                 <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
             </form>

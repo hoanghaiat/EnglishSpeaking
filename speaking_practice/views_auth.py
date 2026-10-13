@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from .forms import CustomUserCreationForm
 from .models import StudentProfile, TeacherProfile, ParentProfile
+
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -26,40 +27,36 @@ def login_view(request):
 
     return render(request, 'registration/login.html')
 
+
 def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
     return redirect('login')
+
 
 def signup(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
 
         if form.is_valid():
             user = form.save()
+            role = user.role
 
-            user.email = request.POST.get('email', '').strip()
-            role = request.POST.get('role')
-
-            if role in ['student', 'teacher', 'parent']:
-                user.role = role
-                user.save()
-
-                # Create appropriate profile based on role
-                if role == 'student':
-                    StudentProfile.objects.create(user=user)
-                elif role == 'teacher':
-                    TeacherProfile.objects.create(user=user)
-                elif role == 'parent':
-                    ParentProfile.objects.create(user=user)
+            # Create the matching profile so role-based views never crash.
+            if role == 'student':
+                StudentProfile.objects.create(user=user)
+            elif role == 'teacher':
+                TeacherProfile.objects.create(user=user)
+            elif role == 'parent':
+                ParentProfile.objects.create(user=user)
 
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('dashboard')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
 
     return render(request, 'registration/signup.html', {'form': form})

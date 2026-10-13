@@ -29,6 +29,16 @@ An application for practicing English speaking skills with structured lessons an
 7. Create a superuser: `python manage.py createsuperuser`
 8. Start the development server: `python manage.py runserver`
 
+### Usage
+
+1. Visit `http://localhost:8000/` to access the application
+2. Login with your credentials (or sign up for a student/teacher/parent account)
+3. Access different dashboards based on your role:
+   - Admin dashboard for managing users and content
+   - Teacher dashboard for managing students and lessons
+   - Student dashboard for accessing lessons and practicing speaking
+   - Parent dashboard for viewing children's progress
+
 ## Project Structure
 
 - `english_speaking_app/` - Main Django project

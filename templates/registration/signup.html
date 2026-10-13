@@ -4,18 +4,33 @@
 <div class="row">
     <div class="col-md-6 mx-auto">
         <h2>Sign Up</h2>
-        
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
             
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+                <input type="text" class="form-control" id="username" name="username" required value="{{ request.POST.username|default:'' }}">
             </div>
-            
+
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email" required value="{{ request.POST.email|default:'' }}">
             </div>
             
             <div class="mb-3">
@@ -32,9 +47,9 @@
                 <label for="role" class="form-label">Role</label>
                 <select class="form-select" id="role" name="role" required>
                     <option value="">Select Role</option>
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="parent">Parent</option>
+                    <option value="student" {% if request.POST.role == "student" %}selected{% endif %}>Student</option>
+                    <option value="teacher" {% if request.POST.role == "teacher" %}selected{% endif %}>Teacher</option>
+                    <option value="parent" {% if request.POST.role == "parent" %}selected{% endif %}>Parent</option>
                 </select>
             </div>
             

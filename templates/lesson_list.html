@@ -1,15 +1,36 @@
 {% extends 'base.html' %}
 
+{% block title %}Lessons{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <h2>Available Lessons</h2>
-        
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <p>Lesson list will be displayed here.</p>
-            </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Available Lessons</h2>
+            {% if user.role == 'teacher' %}
+                <a href="{% url 'teacher_create_lesson' %}" class="btn btn-primary">Create Lesson</a>
+            {% endif %}
         </div>
+
+        {% if lessons %}
+            <div class="list-group mt-3">
+                {% for lesson in lessons %}
+                    <a href="{% url 'lesson_detail' lesson.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ lesson.title }}</h5>
+                            <small>#{{ lesson.order }}</small>
+                        </div>
+                        <p class="mb-1 text-muted">{{ lesson.description|default:"No description."|truncatewords:20 }}</p>
+                        <small class="text-muted">
+                            {{ lesson.chapter.course.title }} &rsaquo; {{ lesson.chapter.title }}
+                            {% if lesson.teacher %} &middot; {{ lesson.teacher.user.username }}{% endif %}
+                        </small>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info mt-3">No lessons available yet.</div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
