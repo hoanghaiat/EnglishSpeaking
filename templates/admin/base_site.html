@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        // Auto-fade Django admin notifications after 4 seconds (click one to dismiss it immediately).
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.messagelist li').forEach(function (li) {
+                li.style.transition = 'opacity 0.6s ease';
+                li.style.cursor = 'pointer';
+                li.title = 'Click to dismiss';
+                li.addEventListener('click', function () { li.remove(); });
+                setTimeout(function () {
+                    li.style.opacity = '0';
+                    setTimeout(function () { li.remove(); }, 700);
+                }, 4000);
+            });
+        });
+    </script>
+{% endblock %}
