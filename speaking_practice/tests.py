@@ -168,6 +168,35 @@ class LessonPermissionTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class AdminTest(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username='root', password='testpass123',
+            role='admin', email='root@example.com',
+        )
+        self.client.force_login(self.admin)
+
+    def test_admin_add_user_page_renders(self):
+        # Regression test: on Django 5.x, inheriting UserAdmin.add_fieldsets
+        # (which references 'usable_password') crashed this page with
+        # FieldError: Unknown field(s) (usable_password).
+        response = self.client.get('/admin/speaking_practice/user/add/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_can_create_user_with_role(self):
+        response = self.client.post('/admin/speaking_practice/user/add/', {
+            'username': 'newteacher',
+            'email': 'newteacher@example.com',
+            'password1': 'StrongPass123',
+            'password2': 'StrongPass123',
+            'role': 'teacher',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            User.objects.filter(username='newteacher', role='teacher').exists()
+        )
+
+
 class SpeakingAttemptTest(TestCase):
     def setUp(self):
         self.teacher = make_user('t1', 'teacher')

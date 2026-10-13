@@ -23,7 +23,16 @@ class CustomUserAdmin(UserAdmin):
         ('Additional Info', {'fields': ('phone_number',)}),
     )
     # Include role on the "add user" page so new users are never role-less.
-    add_fieldsets = UserAdmin.add_fieldsets + (
+    # NOTE: defined explicitly (not inherited from UserAdmin) because
+    # Django 5.x's UserAdmin.add_fieldsets references 'usable_password',
+    # a field that only exists on Django's own AdminUserCreationForm.
+    # Our custom add form doesn't define it, so inheriting would crash
+    # the add-user page with FieldError on Django 5.x.
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2'),
+        }),
         ('Role', {'fields': ('role',)}),
     )
 
