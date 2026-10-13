@@ -11,6 +11,15 @@ menu reflects how the admin actually works.
 from django.contrib.admin import AdminSite
 from django.urls import reverse
 
+from .models import (
+    Chapter,
+    Course,
+    Exercise,
+    Lesson,
+    SpeakingAttempt,
+    StudentProfile,
+)
+
 CONTENT_MODEL_NAMES = {'course', 'chapter', 'lesson', 'exercise'}
 
 NAV_GROUPS = [
@@ -24,6 +33,25 @@ class ESPAdminSite(AdminSite):
     site_header = 'English Speaking Practice'
     site_title = 'ESP Admin'
     index_title = 'Site administration'
+
+    def app_index(self, request, app_label, extra_context=None):
+        """Add lively overview data (stats + recent activity) to the app page."""
+        extra_context = extra_context or {}
+        if app_label == 'speaking_practice':
+            extra_context['esp_stats'] = {
+                'courses': Course.objects.count(),
+                'chapters': Chapter.objects.count(),
+                'lessons': Lesson.objects.count(),
+                'exercises': Exercise.objects.count(),
+                'students': StudentProfile.objects.count(),
+                'attempts': SpeakingAttempt.objects.count(),
+            }
+            extra_context['esp_recent_attempts'] = (
+                SpeakingAttempt.objects
+                .select_related('student__user', 'exercise')
+                .order_by('-created_at')[:5]
+            )
+        return super().app_index(request, app_label, extra_context)
 
     def get_app_list(self, request, app_label=None):
         app_list = super().get_app_list(request, app_label)

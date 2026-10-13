@@ -80,6 +80,18 @@ class ManageContentAccessTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, self.hub_url)
 
+    def test_admin_app_index_shows_overview(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/admin/speaking_practice/')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('esp_stats', r.context)
+        self.assertEqual(r.context['esp_stats']['courses'], 1)
+        self.assertEqual(r.context['esp_stats']['lessons'], 1)
+        # lively overview, not the duplicated group cards
+        self.assertContains(r, 'Quick actions')
+        self.assertContains(r, 'Latest speaking attempts')
+        self.assertNotContains(r, 'Links &amp; practice')
+
 
 class ManageContentCrudTests(TestCase):
     def setUp(self):
