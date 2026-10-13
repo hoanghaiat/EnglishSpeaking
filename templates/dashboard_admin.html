@@ -43,18 +43,30 @@
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <h3>Management Links</h3>
-                <ul class="list-group">
-                    <li class="list-group-item"><a href="{% url 'admin:index' %}">Django Admin Interface</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_user_changelist' %}">Manage Users</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_teacherprofile_changelist' %}">Manage Teachers</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_studentprofile_changelist' %}">Manage Students</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_parentprofile_changelist' %}">Manage Parents</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_course_changelist' %}">Manage Courses</a></li>
-                    <li class="list-group-item"><a href="{% url 'admin:speaking_practice_exercise_changelist' %}">Manage Exercises</a></li>
-                </ul>
+        <div class="row mt-4 g-3">
+            <div class="col-md-6">
+                <div class="card esp-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">&#128218; Learning Content</h5>
+                        <p class="card-text text-muted">Manage courses, chapters, lessons and speaking exercises on one page.</p>
+                        <a href="{% url 'manage_content' %}" class="btn btn-primary">Open Content Manager</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card esp-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">&#128101; People</h5>
+                        <p class="card-text text-muted">Manage accounts and profiles in Django admin.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'admin:speaking_practice_user_changelist' %}" class="btn btn-outline-primary btn-sm">Users</a>
+                            <a href="{% url 'admin:speaking_practice_teacherprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Teachers</a>
+                            <a href="{% url 'admin:speaking_practice_studentprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Students</a>
+                            <a href="{% url 'admin:speaking_practice_parentprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Parents</a>
+                            <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary btn-sm">Django Admin</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

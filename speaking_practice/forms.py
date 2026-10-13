@@ -46,3 +46,65 @@ class CustomUserChangeForm(BaseUserChangeForm):
 
     class Meta(BaseUserChangeForm.Meta):
         model = User
+
+
+# ---------------------------------------------------------------------------
+# Content management forms (used by the admin-only Content Manager pages).
+# ---------------------------------------------------------------------------
+from .models import Course, Chapter, Lesson, Exercise, TeacherProfile  # noqa: E402
+
+
+class _BootstrapModelForm(forms.ModelForm):
+    """ModelForm that applies Bootstrap 5 classes to its widgets."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            widget = field.widget
+            css = widget.attrs.get('class', '')
+            if isinstance(widget, forms.CheckboxInput):
+                widget.attrs['class'] = (css + ' form-check-input').strip()
+            elif isinstance(widget, (forms.Select, forms.SelectMultiple)):
+                widget.attrs['class'] = (css + ' form-select').strip()
+            else:
+                widget.attrs['class'] = (css + ' form-control').strip()
+
+
+class CourseForm(_BootstrapModelForm):
+    class Meta:
+        model = Course
+        fields = ['title', 'description', 'is_active']
+        widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+
+
+class ChapterForm(_BootstrapModelForm):
+    class Meta:
+        model = Chapter
+        fields = ['course', 'title', 'description', 'order', 'is_active']
+        widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+
+
+class LessonForm(_BootstrapModelForm):
+    class Meta:
+        model = Lesson
+        fields = ['chapter', 'title', 'description', 'teacher', 'order', 'is_active']
+        widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['teacher'].queryset = TeacherProfile.objects.select_related('user')
+        self.fields['teacher'].required = False
+
+
+class ExerciseForm(_BootstrapModelForm):
+    class Meta:
+        model = Exercise
+        fields = [
+            'lesson', 'title', 'description', 'instructions', 'expected_text',
+            'reference_audio', 'image', 'order', 'is_active',
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 2}),
+            'instructions': forms.Textarea(attrs={'rows': 3}),
+            'expected_text': forms.Textarea(attrs={'rows': 3}),
+        }

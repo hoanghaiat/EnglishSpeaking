@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'add' %}Add{% else %}Edit{% endif %} {{ label }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manage_content' %}">Learning Content</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if mode == 'add' %}Add{% else %}Edit{% endif %} {{ label }}</li>
+            </ol>
+        </nav>
+
+        <h2>{% if mode == 'add' %}&#10133; Add {{ label }}{% else %}&#9999; Edit {{ label }}{% endif %}</h2>
+        {% if parent %}
+            <p class="text-muted">Inside {{ parent_label }}: <strong>{{ parent }}</strong></p>
+        {% endif %}
+
+        <div class="card esp-card mt-3">
+            <div class="card-body">
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check mb-3">
+                                {{ field }}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <label class="form-label" for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                                {{ field }}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                {% if field.name == 'reference_audio' and field.value %}
+                                    <div class="form-text">Current file: {{ field.value }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary">&#10003; {% if mode == 'add' %}Create {{ label }}{% else %}Save Changes{% endif %}</button>
+                    <a href="{% url 'manage_content' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

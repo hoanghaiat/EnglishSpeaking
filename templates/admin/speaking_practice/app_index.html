@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .esp-admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+  .esp-admin-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(15,23,42,.08); }
+  .esp-admin-card h2 { margin-top: 0; font-size: 18px; }
+  .esp-admin-card p { color: #6b7280; font-size: 13px; }
+  .esp-admin-card ul { list-style: none; margin: 12px 0 0; padding: 0; }
+  .esp-admin-card li { margin: 6px 0; }
+  .esp-admin-card .button { display: inline-block; margin-top: 8px; }
+</style>
+{% endblock %}
+
+{% block nav-breadcrumbs %}
+<nav aria-label="{% translate 'Breadcrumbs' %}">
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; Speaking Practice
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1>&#127908; Speaking Practice &mdash; Management</h1>
+<p>Everything is grouped by job: learning content lives on one friendly page, people and links stay in the classic admin tables.</p>
+
+<div class="esp-admin-grid">
+  <div class="esp-admin-card">
+    <h2>&#128218; Learning content</h2>
+    <p>Manage the whole Course &rarr; Chapter &rarr; Lesson &rarr; Exercise tree on one page &mdash; no more jumping between tables.</p>
+    <a href="{% url 'manage_content' %}" class="button">Open Content Manager</a>
+  </div>
+
+  <div class="esp-admin-card">
+    <h2>&#128101; People</h2>
+    <p>Accounts and profiles.</p>
+    <ul>
+      <li><a href="{% url 'admin:speaking_practice_user_changelist' %}">Users</a></li>
+      <li><a href="{% url 'admin:speaking_practice_teacherprofile_changelist' %}">Teacher profiles</a></li>
+      <li><a href="{% url 'admin:speaking_practice_studentprofile_changelist' %}">Student profiles</a></li>
+      <li><a href="{% url 'admin:speaking_practice_parentprofile_changelist' %}">Parent profiles</a></li>
+    </ul>
+  </div>
+
+  <div class="esp-admin-card">
+    <h2>&#128279; Links &amp; practice</h2>
+    <p>Who teaches whom, who is whose child, assigned lessons and submitted practice.</p>
+    <ul>
+      <li><a href="{% url 'admin:speaking_practice_teacherstudent_changelist' %}">Teacher &ndash; students</a></li>
+      <li><a href="{% url 'admin:speaking_practice_studentparent_changelist' %}">Student &ndash; parents</a></li>
+      <li><a href="{% url 'admin:speaking_practice_studentlesson_changelist' %}">Assigned lessons</a></li>
+      <li><a href="{% url 'admin:speaking_practice_speakingattempt_changelist' %}">Speaking attempts</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
