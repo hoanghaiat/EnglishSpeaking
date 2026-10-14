@@ -92,6 +92,14 @@ class ManageContentAccessTests(TestCase):
         self.assertContains(r, 'Latest speaking attempts')
         self.assertNotContains(r, 'Links &amp; practice')
 
+    def test_admin_pages_load_brand_theme(self):
+        self.client.force_login(self.admin)
+        for url in ('/admin/', '/admin/speaking_practice/',
+                    '/admin/speaking_practice/teacherstudent/'):
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 200)
+            self.assertContains(r, 'css/admin-theme.css')
+
 
 class ManageContentCrudTests(TestCase):
     def setUp(self):

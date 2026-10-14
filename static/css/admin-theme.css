@@ -1,0 +1,148 @@
+/* ============================================================
+   English Speaking Practice — Admin brand theme
+   Friendly, colorful look matching the public site:
+   indigo -> blue -> cyan gradients, rounded pills & cards.
+   Built only on CSS variable overrides + component styling,
+   so Django admin dark mode keeps working.
+   ============================================================ */
+
+:root {
+    /* Brand palette */
+    --esp-indigo: #4338ca;
+    --esp-blue: #2563eb;
+    --esp-cyan: #06b6d4;
+    --esp-gradient: linear-gradient(135deg, #4338ca 0%, #2563eb 60%, #06b6d4 100%);
+    --esp-gradient-dark: linear-gradient(135deg, #3730a3 0%, #1d4ed8 60%, #0891b2 100%);
+
+    /* Django admin variable overrides (light mode) */
+    --primary: #2563eb;
+    --secondary: #4338ca;
+    --accent: #f59e0b;
+    --header-color: #fff;
+    --breadcrumbs-fg: #e0e7ff;
+    --breadcrumbs-link-fg: #fff;
+    --link-fg: #1d4ed8;
+    --link-hover-color: #4338ca;
+    --link-selected-fg: #4338ca;
+    --button-fg: #fff;
+    --button-bg: #2563eb;
+    --button-hover-bg: #1d4ed8;
+    --default-button-bg: #4338ca;
+    --default-button-hover-bg: #3730a3;
+    --close-button-bg: #ef4444;
+    --close-button-hover-bg: #dc2626;
+    --delete-button-bg: #ef4444;
+    --delete-button-hover-bg: #dc2626;
+    --object-tools-fg: #fff;
+    --object-tools-bg: #2563eb;
+    --object-tools-hover-bg: #4338ca;
+}
+
+/* ---------- Header ---------- */
+#header {
+    background: var(--esp-gradient);
+    color: #fff;
+    padding: 14px 40px;
+}
+#header a:link, #header a:visited { color: #fff; }
+#branding h1, #branding h1 a {
+    color: #fff !important;
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+#user-tools { font-size: 12px; }
+#user-tools a { border-bottom: 1px solid rgba(255,255,255,.4); }
+#user-tools a:hover { border-bottom-color: #fff; color: #fff; }
+
+/* ---------- Breadcrumbs ---------- */
+div.breadcrumbs {
+    background: var(--esp-gradient-dark);
+    color: var(--breadcrumbs-fg);
+    padding: 12px 40px;
+    font-size: 13px;
+}
+div.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
+
+/* ---------- Buttons & object tools: rounded pills ---------- */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    border-radius: 999px !important;
+    padding: 9px 20px !important;
+    font-weight: 600;
+}
+.object-tools a {
+    border-radius: 999px !important;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, .35);
+}
+.object-tools a.addlink { padding-right: 28px !important; }
+
+/* ---------- Modules & cards ---------- */
+.module {
+    border-radius: 14px;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+.module h2, .module caption {
+    background: var(--esp-gradient);
+    color: #fff;
+    font-weight: 700;
+    padding: 10px 16px;
+}
+.module h2 a, .module caption a { color: #fff !important; }
+
+/* ---------- Changelist table: soft card ---------- */
+#changelist .results {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+#changelist table thead th {
+    background: #eef2ff;
+    color: #3730a3;
+    font-weight: 700;
+}
+#changelist tbody tr:hover { background: #eef2ff !important; }
+#changelist #toolbar {
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--hairline-color);
+}
+
+/* ---------- Filters panel ---------- */
+#changelist-filter {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+#changelist-filter h2 {
+    background: var(--esp-gradient);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* ---------- Messages: rounded ---------- */
+.messagelist li { border-radius: 12px; }
+
+/* ---------- Sidebar navigation ---------- */
+#nav-sidebar {
+    border-right: 1px solid var(--hairline-color);
+}
+#nav-sidebar .current-model { background: #eef2ff; border-radius: 8px; }
+#nav-sidebar .current-model a { color: #3730a3 !important; font-weight: 700; }
+
+/* ---------- Login page ---------- */
+.login #header { padding: 16px; justify-content: center; }
+.login .form-row input { border-radius: 10px; }
+.login .submit-row input { width: 100%; }
+
+/* ---------- Inline groups ---------- */
+.inline-group {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--hairline-color);
+}
+.inline-group h2 {
+    background: var(--esp-gradient);
+    color: #fff;
+}
