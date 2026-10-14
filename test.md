@@ -4,12 +4,37 @@ Nhật ký những gì đã được kiểm thử sau mỗi commit. Mỗi mục 
 dung chính, kết quả test tự động, kiểm thử thủ công (nếu có) và môi trường.
 
 > Ghi chú: test venv của Muse nằm tại `~/workspace/.venv-esp5` (Django 5.2.17)
-> và `~/workspace/.venv-esp` (Django 4.x). Hoàng chạy local bằng
-> `D:\Automation\EnglishSpeaking\.venv\Scripts\python.exe`.
+> và `~/workspace/.venv-esp` (Django 4.x). Hoàng chạy local tại
+> `D:\EnglishSpeaking` bằng Python global (2026-10-14: Python 3.10.11,
+> Django 4.2.30, không có venv trong thư mục project).
 
 ---
 
-## <next> — Review round 4 (2026-10-14)
+## <next> — Fix: unbalanced divs leaked People table into all /manage/ tabs (2026-10-14)
+
+Bug: 4 `</div>` thừa trong Links & Practice subpanes (round 5) khiến
+`#pane-people` và `#pane-lessons` rớt ra ngoài `.tab-content` → table user và
+filter của People hiện dưới mọi tab. Đã reproduce bằng headless Chromium
+(`getComputedStyle`: pane-people `display:block` dù không active), xóa 4 div
+thừa, verify cả 4 tab chỉ hiện đúng 1 pane, không lỗi JS.
+
+- `manage.py check`: no issues.
+- Full suite: **180/180 passed** (Django 5.2.17).
+- `test_manage`: **105/105 passed** (Django 4.x).
+- Regression test mới: `test_tab_panes_nested_inside_tab_content` — parse HTML,
+  assert mọi `.tab-pane` là con trực tiếp của `.tab-content` (fail trên template
+  cũ: `['pane-people', 'pane-lessons']`, pass sau fix).
+
+## cd6ca96 — Review round 5: Links & Practice sub-tabs, Teacher-Students add button, assign modal fixes (2026-10-14)
+
+Nội dung (theo commit message): tách Links & Practice thành 5 sub-tab (Classes,
+Teacher–Students, Student–Parents, Assigned Lessons, Recent Attempts) với
+`?tab=links&section=` deep-link; thêm nút Link còn thiếu ở Teacher–Students;
+fix layout modal Assign Lesson (RadioSelect bị co 16px).
+
+- 5 tests mới; **179/179 passed** (Django 5.2.17, theo commit message).
+
+## 78d9fd2 — Review round 4 (2026-10-14)
 
 Nội dung: class gộp vào tab Links & Practice (bỏ tab Classes riêng), nút ×
 xóa nhanh học sinh khỏi lớp; fix modal class (checkbox list, teacher preselect);

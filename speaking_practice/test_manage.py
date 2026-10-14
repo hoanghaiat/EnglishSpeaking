@@ -1118,3 +1118,44 @@ class ManageLinksUiTests(TestCase):
         self.assertContains(r, 'data-esp-field="study_class"')
         self.assertContains(r, 'data-esp-field="students"')
         self.assertContains(r, 'data-esp-field="target"')
+
+    def test_tab_panes_nested_inside_tab_content(self):
+        # Regression: unbalanced </div>s once pushed #pane-people and
+        # #pane-lessons outside .tab-content, so the People table (and its
+        # filter) leaked into every other tab.
+        from html.parser import HTMLParser
+
+        class PaneNesting(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.stack = []
+                self.bad = []
+
+            def handle_starttag(self, tag, attrs):
+                if tag != 'div':
+                    return
+                attrs = dict(attrs)
+                classes = attrs.get('class', '').split()
+                self.stack.append((attrs.get('id'), classes))
+                if 'tab-pane' in classes:
+                    parent = self.stack[-2] if len(self.stack) > 1 else (None, [])
+                    if 'tab-content' not in parent[1]:
+                        self.bad.append(attrs.get('id'))
+
+            def handle_endtag(self, tag):
+                if tag == 'div' and self.stack:
+                    self.stack.pop()
+
+        for username, role in (('pn_adm', 'admin'), ('pn_tch', 'teacher')):
+            user = make_user(username, role,
+                             is_staff=(role == 'admin'),
+                             is_superuser=(role == 'admin'))
+            if role == 'teacher':
+                TeacherProfile.objects.create(user=user)
+            self.client.force_login(user)
+            r = self.client.get(reverse('manage_center'))
+            self.assertEqual(r.status_code, 200)
+            checker = PaneNesting()
+            checker.feed(r.content.decode())
+            self.assertEqual(checker.bad, [], role)
+            self.client.logout()
