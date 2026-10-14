@@ -1058,3 +1058,63 @@ class ManageRound4Tests(TestCase):
         self.assertNotContains(r, 'No courses yet')
         # The template comment must not leak into the HTML.
         self.assertNotContains(r, 'Include once per page')
+
+
+class ManageLinksUiTests(TestCase):
+    """Links & Practice UI: sub-tabs, Teacher-Students add button, assign modal."""
+
+    def setUp(self):
+        self.admin = make_user('ui_adm', 'admin', is_staff=True, is_superuser=True)
+        self.teacher = make_user('ui_tch', 'teacher')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher)
+        self.student = make_user('ui_stu', 'student')
+        self.student_profile = StudentProfile.objects.create(user=self.student)
+        course = Course.objects.create(title='UI Course')
+        chapter = Chapter.objects.create(course=course, title='UI Ch', order=1)
+        self.lesson = Lesson.objects.create(chapter=chapter, title='UI Lesson', order=1)
+        self.center = reverse('manage_center') + '?tab=links'
+
+    def test_links_tab_has_five_subtabs(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(self.center)
+        self.assertEqual(r.status_code, 200)
+        for section in ('classes', 'teacherstudents', 'studentparents',
+                        'assigned', 'attempts'):
+            self.assertContains(r, f'id="subtab-{section}"')
+            self.assertContains(r, f'id="subpane-{section}"')
+
+    def test_teacher_student_add_button_visible_for_admin(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(self.center)
+        self.assertContains(
+            r, reverse('manage_add', kwargs={'model_name': 'teacherstudent'}))
+
+    def test_teacher_student_add_button_hidden_for_teacher(self):
+        # Teachers cannot create teacher-student links (admin-only action).
+        self.client.force_login(self.teacher)
+        r = self.client.get(self.center)
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(
+            r, reverse('manage_add', kwargs={'model_name': 'teacherstudent'}))
+
+    def test_assign_modal_radio_group_renders_cleanly(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_assign') + '?modal=1',
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        # Radios wrapped in .form-check inside a radiogroup container...
+        self.assertContains(r, 'role="radiogroup"')
+        self.assertContains(r, 'Whole class')
+        self.assertContains(r, 'Individual students')
+        # ...and the collapsing form-check-input class must NOT be on the
+        # group container (it shrank the group to 16px and overlapped text).
+        self.assertNotContains(r, 'id="id_target" class="form-check-input"')
+
+    def test_assign_modal_students_use_checklist_and_toggle_wrappers(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_assign') + '?modal=1',
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(r, 'esp-checklist')
+        self.assertContains(r, 'data-esp-field="study_class"')
+        self.assertContains(r, 'data-esp-field="students"')
+        self.assertContains(r, 'data-esp-field="target"')

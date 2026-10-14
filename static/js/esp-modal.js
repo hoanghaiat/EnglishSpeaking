@@ -38,6 +38,7 @@
                 root.querySelector('.esp-modal-content').innerHTML = html;
                 root.hidden = false;
                 document.body.classList.add('esp-modal-open');
+                syncModalAssignTarget();
             })
             .catch(function () { window.location.href = url; }); // fallback
     }
@@ -93,10 +94,48 @@
                     document.querySelector(
                         '#' + SHELL_ID + ' .esp-modal-content'
                     ).innerHTML = res.html;
+                    syncModalAssignTarget();
                 }
             });
     });
 
     // Expose for debugging/tests.
     window.espModalClose = closeModal;
+
+    /* Assign-lesson form: only show the field matching the chosen target
+       ("Whole class" -> class picker, "Individual students" -> checklist). */
+    function syncAssignTarget(scope) {
+        var root = scope && scope.querySelector ? scope : document;
+        var checked = root.querySelector('input[name="target"]:checked');
+        if (!checked) return;
+        var form = checked.closest('form');
+        if (!form) return;
+        var showClass = checked.value === 'class';
+        var classWrap = form.querySelector('[data-esp-field="study_class"]');
+        var studentsWrap = form.querySelector('[data-esp-field="students"]');
+        if (classWrap) {
+            if (showClass) { classWrap.removeAttribute('hidden'); }
+            else { classWrap.setAttribute('hidden', ''); }
+        }
+        if (studentsWrap) {
+            if (showClass) { studentsWrap.setAttribute('hidden', ''); }
+            else { studentsWrap.removeAttribute('hidden'); }
+        }
+    }
+
+    function syncModalAssignTarget() {
+        var content = document.querySelector('#' + SHELL_ID + ' .esp-modal-content');
+        if (content) syncAssignTarget(content);
+    }
+
+    document.addEventListener('change', function (e) {
+        var t = e.target && e.target.closest
+            ? e.target.closest('input[name="target"]')
+            : null;
+        if (t) syncAssignTarget(t.ownerDocument || document);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        syncAssignTarget(document);
+    });
 })();

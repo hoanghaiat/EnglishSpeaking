@@ -75,6 +75,9 @@ class _BootstrapModelForm(forms.ModelForm):
                 widget.is_esp_checklist = True
                 widget.attrs['class'] = (css + ' form-check-input').strip()
             elif isinstance(widget, forms.RadioSelect):
+                # Marker for the radiogroup branch in _form_fields.html.
+                # (The class must NOT land on the group container div.)
+                widget.is_esp_radiogroup = True
                 widget.attrs['class'] = (css + ' form-check-input').strip()
             elif isinstance(widget, (forms.Select, forms.SelectMultiple)):
                 widget.attrs['class'] = (css + ' form-select').strip()
@@ -324,6 +327,9 @@ class AssignLessonsForm(forms.Form):
 
     def __init__(self, *args, teacher_profile=None, is_admin=False, **kwargs):
         super().__init__(*args, **kwargs)
+        # Rendering markers for _form_fields.html (plain Form, not _BootstrapModelForm).
+        self.fields['target'].widget.is_esp_radiogroup = True
+        self.fields['students'].widget.is_esp_checklist = True
         if is_admin:
             classes = StudyClass.objects.select_related(
                 'teacher__user').order_by('name')

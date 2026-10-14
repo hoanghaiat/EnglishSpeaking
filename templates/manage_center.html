@@ -46,6 +46,9 @@
         font-size: 12px; cursor: pointer; padding: 0;
     }
     .esp-chip-x:hover { background: #fecaca; }
+    /* Sub-tabs inside Links & Practice. */
+    .links-subpane[hidden] { display: none; }
+    #linksSubTabs .nav-link { border-radius: 999px; }
 </style>
 
 <div class="mb-3">
@@ -112,6 +115,7 @@
             <div class="mgmt-pane-actions">
                 <form method="get" class="d-flex gap-2" role="search">
                     <input type="hidden" name="tab" value="links">
+                    <input type="hidden" name="section" value="">
                     <input type="search" name="q_links" value="{{ q_links }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search username, lesson&hellip;" aria-label="Search links">
                     <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
                     {% if q_links %}<a href="?tab=links" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
@@ -120,6 +124,25 @@
             </div>
         </div>
 
+        <ul class="nav nav-pills mb-3" id="linksSubTabs" role="tablist" aria-label="Links and practice sections">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subtab-classes" data-links-subtab="classes" type="button" role="tab" aria-controls="subpane-classes">&#127979; Classes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subtab-teacherstudents" data-links-subtab="teacherstudents" type="button" role="tab" aria-controls="subpane-teacherstudents">&#128101; Teacher&ndash;Students</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subtab-studentparents" data-links-subtab="studentparents" type="button" role="tab" aria-controls="subpane-studentparents">&#128106; Student&ndash;Parents</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subtab-assigned" data-links-subtab="assigned" type="button" role="tab" aria-controls="subpane-assigned">&#128214; Assigned Lessons</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subtab-attempts" data-links-subtab="attempts" type="button" role="tab" aria-controls="subpane-attempts">&#127908; Recent Attempts</button>
+            </li>
+        </ul>
+
+        <div class="links-subpane" id="subpane-classes" role="tabpanel" aria-labelledby="subtab-classes">
         <div class="card esp-card mb-4" id="classes-card">
             <div class="card-header bg-white">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -127,6 +150,7 @@
                     <div class="d-flex flex-wrap gap-2 align-items-center">
                         <form method="get" class="d-flex gap-2" role="search">
                             <input type="hidden" name="tab" value="links">
+                            <input type="hidden" name="section" value="">
                             <input type="search" name="q_class" value="{{ q_class }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search class&hellip;" aria-label="Search classes">
                             <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
                             {% if q_class %}<a href="?tab=links" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
@@ -173,11 +197,15 @@
             </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="card esp-card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">&#128101; Teacher &ndash; Students</h5>
+        </div><!-- /#subpane-classes -->
+
+        <div class="links-subpane" id="subpane-teacherstudents" role="tabpanel" aria-labelledby="subtab-teacherstudents" hidden>
+            <div class="card esp-card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">&#128101; Teacher &ndash; Students</h5>
+                        {% if is_admin %}
+                        <a data-esp-modal href="{% url 'manage_add' model_name='teacherstudent' %}" class="btn btn-sm btn-primary">&#10133; Link</a>
+                        {% endif %}
                     </div>
                     <ul class="list-group list-group-flush">
                         {% for link in teacher_students %}
@@ -193,10 +221,12 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card esp-card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">&#128106; Student &ndash; Parents</h5>
+        </div><!-- /#subpane-teacherstudents -->
+
+        <div class="links-subpane" id="subpane-studentparents" role="tabpanel" aria-labelledby="subtab-studentparents" hidden>
+            <div class="card esp-card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">&#128106; Student &ndash; Parents</h5>
                         <a data-esp-modal href="{% url 'manage_add' model_name='studentparent' %}" class="btn btn-sm btn-primary">&#10133; Link</a>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -211,10 +241,12 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card esp-card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">&#128214; Assigned Lessons</h5>
+        </div><!-- /#subpane-studentparents -->
+
+        <div class="links-subpane" id="subpane-assigned" role="tabpanel" aria-labelledby="subtab-assigned" hidden>
+            <div class="card esp-card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">&#128214; Assigned Lessons</h5>
                         <a data-esp-modal href="{% url 'manage_assign' %}" class="btn btn-sm btn-primary">&#10133; Assign</a>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -229,10 +261,12 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card esp-card h-100">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">&#127908; Recent Speaking Attempts</h5>
+        </div><!-- /#subpane-assigned -->
+
+        <div class="links-subpane" id="subpane-attempts" role="tabpanel" aria-labelledby="subtab-attempts" hidden>
+            <div class="card esp-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">&#127908; Recent Speaking Attempts</h5>
                     </div>
                     <ul class="list-group list-group-flush">
                         {% for attempt in recent_attempts %}
@@ -248,7 +282,7 @@
                     </ul>
                 </div>
             </div>
-        </div>
+        </div><!-- /#subpane-attempts -->
     </div>
 
     {# ---------------- Tab: People ---------------- #}
@@ -458,7 +492,11 @@
         var pane = btn.getAttribute('data-bs-target');
         var rev = { '#pane-learning': 'learning', '#pane-people': 'people', '#pane-links': 'links', '#pane-lessons': 'lessons' };
         remember(btn.id);
-        history.replaceState(null, '', '?tab=' + (rev[pane] || 'links'));
+        var q = '?tab=' + (rev[pane] || 'links');
+        if (pane === '#pane-links' && window.espLinksSection) {
+            q += '&section=' + window.espLinksSection();
+        }
+        history.replaceState(null, '', q);
     }
     document.querySelectorAll('#mgmtTabs [data-bs-toggle="tab"]').forEach(function (btn) {
         btn.addEventListener('shown.bs.tab', function () { noteTab(btn); });
@@ -467,6 +505,63 @@
             if (!window.bootstrap) { show(btn.id); noteTab(btn); }
         });
     });
+})();
+
+/* Sub-tabs inside Links & Practice: ?tab=links&section=<id>.
+   The active section is remembered so modal/filter actions land back here. */
+(function () {
+    var SECTION_KEY = 'esp-manage-links-section';
+    var VALID = ['classes', 'teacherstudents', 'studentparents', 'assigned', 'attempts'];
+    function remember(s) {
+        try { sessionStorage.setItem(SECTION_KEY, s); } catch (e) {}
+    }
+    function remembered() {
+        try { return sessionStorage.getItem(SECTION_KEY); } catch (e) { return null; }
+    }
+    function current() {
+        var p = new URLSearchParams(window.location.search).get('section');
+        if (VALID.indexOf(p) !== -1) return p;
+        var s = remembered();
+        if (VALID.indexOf(s) !== -1) return s;
+        return 'classes';
+    }
+    function show(id) {
+        if (VALID.indexOf(id) === -1) id = 'classes';
+        document.querySelectorAll('#linksSubTabs .nav-link').forEach(function (b) {
+            var on = b.getAttribute('data-links-subtab') === id;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('.links-subpane').forEach(function (p) {
+            if (p.id === 'subpane-' + id) { p.removeAttribute('hidden'); }
+            else { p.setAttribute('hidden', ''); }
+        });
+        remember(id);
+        // Keep filter forms on this tab round-tripping the section.
+        document.querySelectorAll('#pane-links input[name="section"]').forEach(function (i) {
+            i.value = id;
+        });
+        return id;
+    }
+    // Exposed for the main-tab script so the URL keeps the section.
+    window.espLinksSection = function () {
+        var active = document.querySelector('#linksSubTabs .nav-link.active');
+        return active ? active.getAttribute('data-links-subtab') : current();
+    };
+    show(current());
+    document.querySelectorAll('#linksSubTabs .nav-link').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var id = show(b.getAttribute('data-links-subtab'));
+            history.replaceState(null, '', '?tab=links&section=' + id);
+        });
+    });
+    var linksTab = document.getElementById('tab-links');
+    if (linksTab) {
+        linksTab.addEventListener('shown.bs.tab', function () { show(current()); });
+        linksTab.addEventListener('click', function () {
+            if (!window.bootstrap) show(current());
+        });
+    }
 })();
 </script>
 {% endblock %}

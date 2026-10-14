@@ -18,6 +18,8 @@
         margin: 0;
     }
     .esp-check-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Field wrapper toggled by the assign-lesson target radios. */
+    [data-esp-field][hidden] { display: none; }
 </style>
 {% if form.non_field_errors %}
     <div class="alert alert-danger">
@@ -27,9 +29,9 @@
 
 {% for field in form %}
     {% if field.field.widget.is_esp_checklist %}
-        <div class="mb-3">
-            <span class="form-label" id="{{ field.id_for_label }}-label"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</span>
-            <div class="esp-checklist" role="group" aria-labelledby="{{ field.id_for_label }}-label">
+        <div class="mb-3" data-esp-field="{{ field.name }}">
+            <span class="form-label" id="{{ field.auto_id }}-label"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</span>
+            <div class="esp-checklist" role="group" aria-labelledby="{{ field.auto_id }}-label">
                 {% for sub in field %}
                     <label class="esp-check-item" for="{{ sub.id_for_label }}">{{ sub.tag }}<span>{{ sub.choice_label }}</span></label>
                 {% endfor %}
@@ -37,15 +39,29 @@
             {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
             {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
         </div>
+    {% elif field.field.widget.is_esp_radiogroup %}
+        <div class="mb-3" data-esp-field="{{ field.name }}">
+            <span class="form-label" id="{{ field.auto_id }}-label"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</span>
+            <div role="radiogroup" aria-labelledby="{{ field.auto_id }}-label">
+                {% for sub in field %}
+                    <div class="form-check">
+                        {{ sub.tag }}
+                        <label class="form-check-label" for="{{ sub.id_for_label }}">{{ sub.choice_label }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
     {% elif field.field.widget.input_type == 'checkbox' %}
-        <div class="form-check mb-3">
+        <div class="form-check mb-3" data-esp-field="{{ field.name }}">
             {{ field }}
             <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
             {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
             {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
         </div>
     {% else %}
-        <div class="mb-3">
+        <div class="mb-3" data-esp-field="{{ field.name }}">
             <label class="form-label" for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
             {{ field }}
             {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
