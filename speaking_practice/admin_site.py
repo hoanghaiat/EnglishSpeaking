@@ -19,7 +19,7 @@ CONTENT_MODEL_NAMES = {'course', 'chapter', 'lesson', 'exercise'}
 NAV_GROUPS = [
     ('\U0001F4DA Learning Content', ['ContentManager']),
     ('\U0001F465 People', ['User', 'TeacherProfile', 'StudentProfile', 'ParentProfile']),
-    ('\U0001F517 Links & Practice', ['TeacherStudent', 'StudentParent', 'StudentLesson', 'SpeakingAttempt']),
+    ('\U0001F517 Links & Practice', ['TeacherStudent', 'StudentParent', 'StudentLesson', 'SpeakingAttempt', 'StudyClass', 'ChangeLog']),
 ]
 
 

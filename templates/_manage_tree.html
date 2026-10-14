@@ -1,26 +1,12 @@
-{# Learning Content tree — shared by the Management Center tab. Expects 'tree'. #}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
-    <div>
-        <h2>&#128218; Learning Content</h2>
-        <p class="text-muted mb-0">Manage all courses, chapters, lessons and exercises on one page.</p>
-    </div>
-    <a data-esp-modal href="{% url 'manage_add' model_name='course' %}" class="btn btn-primary">&#10133; New Course</a>
-</div>
-
-<div class="alert alert-info mt-3">
-    <strong>How it works:</strong> a <strong>Course</strong> contains <strong>Chapters</strong> &rarr;
-    each chapter contains <strong>Lessons</strong> &rarr; each lesson contains
-    <strong>Speaking exercises</strong>. Use <strong>&#10133;</strong> to add a child item,
-    &#9999; to edit, &#128465; to delete.
-</div>
-
+{# Learning Content tree with expand/collapse. Expects 'tree' and 'expand_all'. #}
 {% for node in tree %}
     {% with course=node.obj %}
-    <div class="card esp-card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 bg-white">
-            <div>
-                <h5 class="mb-0">&#128218; {{ course.title }}</h5>
-                <div class="mt-1">
+    <div class="esp-twisty-item card esp-card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <button type="button" class="esp-twisty" data-esp-twisty aria-expanded="{% if expand_all %}true{% else %}false{% endif %}">
+                <span class="esp-twisty-icon" aria-hidden="true">&#9654;</span>
+                <strong>&#128218; {{ course.title }}</strong>
+                <span class="ms-1">
                     <span class="badge bg-secondary">{{ node.chapter_count }} chapter{{ node.chapter_count|pluralize }}</span>
                     <span class="badge bg-secondary">{{ node.lesson_count }} lesson{{ node.lesson_count|pluralize }}</span>
                     <span class="badge bg-secondary">{{ node.exercise_count }} exercise{{ node.exercise_count|pluralize }}</span>
@@ -29,8 +15,8 @@
                     {% else %}
                         <span class="badge bg-warning text-dark">Hidden</span>
                     {% endif %}
-                </div>
-            </div>
+                </span>
+            </button>
             <div class="btn-group btn-group-sm" role="group" aria-label="Course actions">
                 <a data-esp-modal href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}" class="btn btn-outline-primary">&#10133; Chapter</a>
                 <a data-esp-modal href="{% url 'manage_edit' model_name='course' pk=course.pk %}" class="btn btn-outline-secondary">&#9999;</a>
@@ -38,75 +24,82 @@
             </div>
         </div>
 
-        <div class="card-body">
-            {% if course.description %}<p class="text-muted">{{ course.description }}</p>{% endif %}
+        <div class="esp-twisty-body"{% if not expand_all %} hidden{% endif %}>
+            <div class="card-body">
+                {% if course.description %}<p class="text-muted">{{ course.description }}</p>{% endif %}
 
-            {% for cnode in node.chapters %}
-                {% with chapter=cnode.obj %}
-                <div class="border-start border-3 border-primary ps-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <span class="badge bg-primary me-1">#{{ chapter.order }}</span>
-                            <strong>{{ chapter.title }}</strong>
-                            <span class="badge bg-light text-dark ms-1">{{ cnode.lessons|length }} lesson{{ cnode.lessons|length|pluralize }}</span>
-                            {% if not chapter.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Chapter actions">
-                            <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}" class="btn btn-outline-primary">&#10133; Lesson</a>
-                            <a data-esp-modal href="{% url 'manage_edit' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                            <a data-esp-modal href="{% url 'manage_delete' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-danger">&#128465;</a>
-                        </div>
-                    </div>
-
-                    {% for lnode in cnode.lessons %}
-                        {% with lesson=lnode.obj %}
-                        <div class="border-start border-3 border-success ps-3 mt-2 ms-2">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div>
-                                    <span class="badge bg-success me-1">#{{ lesson.order }}</span>
-                                    <strong>{{ lesson.title }}</strong>
-                                    <span class="badge bg-light text-dark ms-1">{{ lnode.exercises|length }} exercise{{ lnode.exercises|length|pluralize }}</span>
-                                    {% if not lesson.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
-                                </div>
-                                <div class="btn-group btn-group-sm" role="group" aria-label="Lesson actions">
-                                    <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}" class="btn btn-outline-primary">&#10133; Exercise</a>
-                                    <a data-esp-modal href="{% url 'manage_edit' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                                    <a data-esp-modal href="{% url 'manage_delete' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-danger">&#128465;</a>
-                                </div>
+                {% for cnode in node.chapters %}
+                    {% with chapter=cnode.obj %}
+                    <div class="esp-twisty-item border-start border-3 border-primary ps-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <button type="button" class="esp-twisty" data-esp-twisty aria-expanded="{% if expand_all %}true{% else %}false{% endif %}">
+                                <span class="esp-twisty-icon" aria-hidden="true">&#9654;</span>
+                                <span class="badge bg-primary me-1">#{{ chapter.order }}</span>
+                                <strong>{{ chapter.title }}</strong>
+                                <span class="badge bg-light text-dark ms-1">{{ cnode.lessons|length }} lesson{{ cnode.lessons|length|pluralize }}</span>
+                                {% if not chapter.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
+                            </button>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Chapter actions">
+                                <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}" class="btn btn-outline-primary">&#10133; Lesson</a>
+                                <a data-esp-modal href="{% url 'manage_edit' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                <a data-esp-modal href="{% url 'manage_delete' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-danger">&#128465;</a>
                             </div>
+                        </div>
 
-                            {% for exercise in lnode.exercises %}
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2 ms-2 ps-3 border-start border-3 border-info">
-                                <div>
-                                    <span class="badge bg-info text-dark me-1">#{{ exercise.order }}</span>
-                                    {{ exercise.title }}
-                                    {% if exercise.expected_text %}
-                                        <small class="text-muted d-block">&#128483; Say: "{{ exercise.expected_text|truncatewords:12 }}"</small>
-                                    {% endif %}
-                                    {% if not exercise.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
+                        <div class="esp-twisty-body mt-2"{% if not expand_all %} hidden{% endif %}>
+                            {% for lnode in cnode.lessons %}
+                                {% with lesson=lnode.obj %}
+                                <div class="esp-twisty-item border-start border-3 border-success ps-3 mt-2 ms-2">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <button type="button" class="esp-twisty" data-esp-twisty aria-expanded="{% if expand_all %}true{% else %}false{% endif %}">
+                                            <span class="esp-twisty-icon" aria-hidden="true">&#9654;</span>
+                                            <span class="badge bg-success me-1">#{{ lesson.order }}</span>
+                                            <strong>{{ lesson.title }}</strong>
+                                            <span class="badge bg-light text-dark ms-1">{{ lnode.exercises|length }} exercise{{ lnode.exercises|length|pluralize }}</span>
+                                            {% if not lesson.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
+                                        </button>
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Lesson actions">
+                                            <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}" class="btn btn-outline-primary">&#10133; Exercise</a>
+                                            <a data-esp-modal href="{% url 'manage_edit' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                            <a data-esp-modal href="{% url 'manage_delete' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="esp-twisty-body"{% if not expand_all %} hidden{% endif %}>
+                                        {% for exercise in lnode.exercises %}
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2 ms-2 ps-3 border-start border-3 border-info">
+                                            <div>
+                                                <span class="badge bg-info text-dark me-1">#{{ exercise.order }}</span>
+                                                {{ exercise.title }}
+                                                {% if exercise.expected_text %}
+                                                    <small class="text-muted d-block">&#128483; Say: "{{ exercise.expected_text|truncatewords:12 }}"</small>
+                                                {% endif %}
+                                                {% if not exercise.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
+                                            </div>
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Exercise actions">
+                                                <a data-esp-modal href="{% url 'manage_edit' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                                <a data-esp-modal href="{% url 'manage_delete' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                                            </div>
+                                        </div>
+                                        {% empty %}
+                                        <p class="text-muted small ms-2 mt-2 mb-0">No exercises yet — <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}">add the first one</a>.</p>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                                <div class="btn-group btn-group-sm" role="group" aria-label="Exercise actions">
-                                    <a data-esp-modal href="{% url 'manage_edit' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                                    <a data-esp-modal href="{% url 'manage_delete' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-danger">&#128465;</a>
-                                </div>
-                            </div>
+                                {% endwith %}
                             {% empty %}
-                            <p class="text-muted small ms-2 mt-2 mb-0">No exercises yet — <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}">add the first one</a>.</p>
+                            <p class="text-muted small mt-2 mb-0">No lessons yet — <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}">add the first one</a>.</p>
                             {% endfor %}
                         </div>
-                        {% endwith %}
-                    {% empty %}
-                    <p class="text-muted small mt-2 mb-0">No lessons yet — <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}">add the first one</a>.</p>
-                    {% endfor %}
-                </div>
-                {% endwith %}
-            {% empty %}
-            <p class="text-muted mb-0">No chapters yet — <a data-esp-modal href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}">add the first chapter</a>.</p>
-            {% endfor %}
+                    </div>
+                    {% endwith %}
+                {% empty %}
+                <p class="text-muted mb-0">No chapters yet — <a data-esp-modal href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}">add the first chapter</a>.</p>
+                {% endfor %}
+            </div>
         </div>
     </div>
     {% endwith %}
 {% empty %}
     <div class="alert alert-info">No courses yet. <a data-esp-modal href="{% url 'manage_add' model_name='course' %}">Create your first course</a> to start building lessons.</div>
 {% endfor %}
-

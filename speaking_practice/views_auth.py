@@ -8,7 +8,7 @@ from .models import StudentProfile, TeacherProfile, ParentProfile
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('home')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -26,7 +26,8 @@ def login_view(request):
                 else:
                     request.session.set_expiry(0)
                 messages.success(request, 'Login successful!')
-                return redirect('dashboard')
+                # Every role lands on Home after a successful login.
+                return redirect('home')
             else:
                 messages.error(request, 'Account is disabled.')
         else:

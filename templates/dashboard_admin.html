@@ -45,13 +45,13 @@
 
         <div class="row mt-4 g-3">
             <div class="col-md-12">
-                <div class="card esp-card h-100">
+                <div class="card esp-card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0">&#128337; Change History</h5>
+                        <a href="{% url 'changelog_list' %}" class="btn btn-sm btn-outline-primary">View all</a>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">&#128100; My Account</h5>
-                        <p class="mb-1"><strong>{{ request.user.username }}</strong> &mdash; {{ request.user.get_role_display }}</p>
-                        <p class="text-muted small mb-0">
-                            {% if request.user.email %}{{ request.user.email }} &middot; {% endif %}Joined {{ request.user.date_joined|date:"M d, Y" }}
-                        </p>
+                        {% include '_changelog_entries.html' with entries=changelog %}
                     </div>
                 </div>
             </div>

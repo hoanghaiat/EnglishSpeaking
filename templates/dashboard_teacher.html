@@ -76,5 +76,15 @@
     {% else %}
         <p class="text-muted">You haven't created any speaking lessons yet. <a href="{% url 'teacher_create_lesson' %}">Create your first lesson</a>.</p>
     {% endif %}
+
+    <div class="card esp-card mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">&#128337; Change History</h5>
+            <a href="{% url 'changelog_list' %}" class="btn btn-sm btn-outline-primary">View all</a>
+        </div>
+        <div class="card-body">
+            {% include '_changelog_entries.html' with entries=changelog %}
+        </div>
+    </div>
 </div>
 {% endblock %}

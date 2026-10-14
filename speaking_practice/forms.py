@@ -4,6 +4,7 @@ from django.contrib.auth.forms import (
     UserCreationForm as BaseUserCreationForm,
     UserChangeForm as BaseUserChangeForm,
 )
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -54,6 +55,7 @@ class CustomUserChangeForm(BaseUserChangeForm):
 from .models import (
     Course, Chapter, Lesson, Exercise, TeacherProfile, StudentProfile,
     ParentProfile, TeacherStudent, StudentParent, StudentLesson,
+    StudyClass,
 )  # noqa: E402
 
 
@@ -178,6 +180,12 @@ class ManagedUserEditForm(_BootstrapModelForm):
         return user
 
 
+def _own_students(teacher_profile):
+    return StudentProfile.objects.filter(
+        assigned_teachers__teacher=teacher_profile
+    ).distinct().select_related('user').order_by('user__username')
+
+
 class TeacherStudentForm(_BootstrapModelForm):
     class Meta:
         model = TeacherStudent
@@ -196,12 +204,32 @@ class StudentParentForm(_BootstrapModelForm):
         model = StudentParent
         fields = ['student', 'parent', 'relationship_type']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, teacher_profile=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['student'].queryset = StudentProfile.objects.select_related(
-            'user').order_by('user__username')
-        self.fields['parent'].queryset = ParentProfile.objects.select_related(
-            'user').order_by('user__username')
+        if teacher_profile is not None:
+            own = _own_students(teacher_profile)
+            self.fields['student'].queryset = own
+            self.fields['parent'].queryset = ParentProfile.objects.filter(
+                Q(student_links__student__in=own)
+                | Q(student_links__isnull=True)
+            ).select_related('user').distinct().order_by('user__username')
+        else:
+            self.fields['student'].queryset = StudentProfile.objects.select_related(
+                'user').order_by('user__username')
+            self.fields['parent'].queryset = ParentProfile.objects.select_related(
+                'user').order_by('user__username')
+
+    def clean(self):
+        cleaned = super().clean()
+        student = cleaned.get('student')
+        if student is not None:
+            existing = StudentParent.objects.filter(student=student)
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.count() >= 2:
+                raise forms.ValidationError(
+                    'A student can be linked to at most 2 parents.')
+        return cleaned
 
 
 class StudentLessonForm(_BootstrapModelForm):
@@ -209,10 +237,91 @@ class StudentLessonForm(_BootstrapModelForm):
         model = StudentLesson
         fields = ['student', 'lesson']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, teacher_profile=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['student'].queryset = StudentProfile.objects.select_related(
-            'user').order_by('user__username')
+        if teacher_profile is not None:
+            self.fields['student'].queryset = _own_students(teacher_profile)
+        else:
+            self.fields['student'].queryset = StudentProfile.objects.select_related(
+                'user').order_by('user__username')
         self.fields['lesson'].queryset = Lesson.objects.select_related(
             'chapter__course').order_by('chapter__course__title',
                                         'chapter__order', 'order')
+
+
+class StudyClassForm(_BootstrapModelForm):
+    """Create / edit a study class. The student queryset is scoped by the view."""
+
+    class Meta:
+        model = StudyClass
+        fields = ['name', 'students']
+        widgets = {'students': forms.CheckboxSelectMultiple}
+
+    def __init__(self, *args, teacher_profile=None, is_admin=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if is_admin:
+            teacher_field = forms.ModelChoiceField(
+                queryset=TeacherProfile.objects.select_related(
+                    'user').order_by('user__username'),
+                widget=forms.Select(attrs={'class': 'form-select'}),
+                label='Teacher')
+            self.fields = {'teacher': teacher_field, **self.fields}
+            self.fields['students'].queryset = (
+                StudentProfile.objects.select_related('user')
+                .order_by('user__username'))
+        else:
+            self.fields['students'].queryset = _own_students(teacher_profile)
+        self.fields['students'].required = False
+
+    def _get_validation_exclusions(self):
+        # 'teacher' is set by the view (teachers), not by a form field, so
+        # keep it in unique validation: names must be unique per teacher.
+        exclude = super()._get_validation_exclusions()
+        exclude.discard('teacher')
+        return exclude
+
+
+class AssignLessonsForm(forms.Form):
+    """Assign one lesson to a whole class or to individually picked students."""
+
+    TARGET_CHOICES = [('class', 'Whole class'), ('students', 'Individual students')]
+
+    lesson = forms.ModelChoiceField(
+        queryset=Lesson.objects.select_related(
+            'chapter__course').order_by('chapter__course__title',
+                                       'chapter__order', 'order'),
+        widget=forms.Select(attrs={'class': 'form-select'}))
+    target = forms.ChoiceField(
+        choices=TARGET_CHOICES, initial='class',
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}))
+    study_class = forms.ModelChoiceField(
+        queryset=StudyClass.objects.none(), required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}))
+    students = forms.ModelMultipleChoiceField(
+        queryset=StudentProfile.objects.none(), required=False,
+        widget=forms.CheckboxSelectMultiple)
+
+    def __init__(self, *args, teacher_profile=None, is_admin=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if is_admin:
+            classes = StudyClass.objects.select_related(
+                'teacher__user').order_by('name')
+            students = StudentProfile.objects.select_related(
+                'user').order_by('user__username')
+        else:
+            classes = StudyClass.objects.filter(
+                teacher=teacher_profile).order_by('name')
+            students = StudentProfile.objects.filter(
+                assigned_teachers__teacher=teacher_profile
+            ).select_related('user').distinct().order_by('user__username')
+        self.fields['study_class'].queryset = classes
+        self.fields['students'].queryset = students
+
+    def clean(self):
+        cleaned = super().clean()
+        target = cleaned.get('target')
+        if target == 'class' and not cleaned.get('study_class'):
+            self.add_error('study_class', 'Pick a class to assign the lesson to.')
+        if target == 'students' and not cleaned.get('students'):
+            self.add_error('students', 'Pick at least one student.')
+        return cleaned

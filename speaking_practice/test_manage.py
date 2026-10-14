@@ -13,6 +13,7 @@ from .models import (
     StudentLesson,
     StudentParent,
     StudentProfile,
+    StudyClass,
     TeacherProfile,
     TeacherStudent,
     User,
@@ -49,10 +50,20 @@ class ManageContentAccessTests(TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertIn('/accounts/login/', r.url)
 
-    def test_teacher_forbidden(self):
+    def test_teacher_allowed_scoped(self):
+        # Teachers get scoped access: their own classes/links, no content tab.
         self.client.force_login(self.teacher)
         r = self.client.get(self.hub_url)
-        self.assertRedirects(r, reverse('dashboard'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'My Classes')
+        self.assertNotContains(r, 'id="pane-learning"')
+
+    def test_teacher_cannot_touch_content_models(self):
+        self.client.force_login(self.teacher)
+        r = self.client.post(
+            reverse('manage_add', kwargs={'model_name': 'course'}),
+            {'title': 'Nope'})
+        self.assertRedirects(r, reverse('manage_center'))
 
     def test_student_forbidden(self):
         self.client.force_login(self.student)
@@ -68,9 +79,8 @@ class ManageContentAccessTests(TestCase):
         self.client.force_login(self.teacher)
         r = self.client.post(
             reverse('manage_add', kwargs={'model_name': 'course'}),
-            {'title': 'Sneaky', 'description': ''})
-        self.assertRedirects(r, reverse('dashboard'))
-        self.assertFalse(Course.objects.filter(title='Sneaky').exists())
+            {'title': 'Nope 2'})
+        self.assertRedirects(r, reverse('manage_center'))
 
     def test_admin_sees_full_tree(self):
         self.client.force_login(self.admin)
@@ -173,8 +183,12 @@ class ManageContentAccessTests(TestCase):
         self.assertContains(r, 'id="pane-links"')
         self.assertContains(r, 'Recent Speaking Attempts')
 
-    def test_center_forbidden_for_non_admin(self):
+    def test_center_forbidden_for_non_manager(self):
+        # Teachers now get scoped access; students/parents are still out.
         self.client.force_login(self.teacher)
+        r = self.client.get(reverse('manage_center'))
+        self.assertEqual(r.status_code, 200)
+        self.client.force_login(self.student)
         r = self.client.get(reverse('manage_center'))
         self.assertEqual(r.status_code, 302)
 
@@ -241,7 +255,7 @@ class ManageContentAccessTests(TestCase):
         r = self.client.get(reverse('dashboard'))
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Total Users')  # stats stay
-        self.assertContains(r, 'My Account')
+        self.assertContains(r, 'Change History')  # replaces My Account
         self.assertNotContains(r, 'Open Content Manager')
         self.assertNotContains(r, 'Student Practice Status')
 
@@ -508,3 +522,337 @@ class ManageLinksTests(TestCase):
         r = self.client.get(reverse('manage_center'))
         self.assertContains(r, 'l_tch')
         self.assertContains(r, 'Recent Speaking Attempts')
+
+
+class ManageClassesTests(TestCase):
+    def setUp(self):
+        self.admin = make_user('cl_adm', 'admin', is_staff=True, is_superuser=True)
+        self.teacher = make_user('cl_tch', 'teacher')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher)
+        self.other_teacher = make_user('cl_tch2', 'teacher')
+        self.other_profile = TeacherProfile.objects.create(user=self.other_teacher)
+        self.student = make_user('cl_stu', 'student')
+        self.student_profile = StudentProfile.objects.create(user=self.student)
+        TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+
+    def test_teacher_creates_class(self):
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('class_add'), {
+            'name': '7/13', 'students': [self.student_profile.pk],
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        cls = StudyClass.objects.get(name='7/13')
+        self.assertEqual(cls.teacher, self.teacher_profile)
+        self.assertEqual(list(cls.students.all()), [self.student_profile])
+
+    def test_teacher_cannot_use_other_teachers_students(self):
+        outsider = make_user('cl_out', 'student')
+        outsider_profile = StudentProfile.objects.create(user=outsider)
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('class_add'), {
+            'name': '7/14', 'students': [outsider_profile.pk],
+        })
+        # The outsider is not a valid choice for this teacher -> form error,
+        # nothing is created.
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(StudyClass.objects.filter(name='7/14').exists())
+
+    def test_teacher_cannot_edit_other_teachers_class(self):
+        cls = StudyClass.objects.create(
+            name='X', teacher=self.other_profile)
+        self.client.force_login(self.teacher)
+        r = self.client.get(
+            reverse('class_edit', kwargs={'pk': cls.pk}))
+        self.assertRedirects(r, reverse('manage_center'))
+
+    def test_admin_creates_class_for_any_teacher(self):
+        self.client.force_login(self.admin)
+        r = self.client.post(reverse('class_add'), {
+            'teacher': self.teacher_profile.pk,
+            'name': '8/1', 'students': [self.student_profile.pk],
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        cls = StudyClass.objects.get(name='8/1')
+        self.assertEqual(cls.teacher, self.teacher_profile)
+
+    def test_class_name_unique_per_teacher(self):
+        StudyClass.objects.create(
+            name='7/13', teacher=self.teacher_profile)
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('class_add'), {'name': '7/13'})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'already exists')
+
+    def test_teacher_deletes_own_class(self):
+        cls = StudyClass.objects.create(
+            name='Temp', teacher=self.teacher_profile)
+        cls.students.add(self.student_profile)
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('class_delete', kwargs={'pk': cls.pk}))
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertFalse(StudyClass.objects.filter(pk=cls.pk).exists())
+        # Students themselves are kept.
+        self.assertTrue(
+            StudentProfile.objects.filter(pk=self.student_profile.pk).exists())
+
+    def test_class_changes_are_logged(self):
+        from .models import ChangeLog
+        self.client.force_login(self.teacher)
+        self.client.post(reverse('class_add'), {'name': 'Logged'})
+        entry = ChangeLog.objects.latest('created_at')
+        self.assertEqual(entry.category, 'class')
+        self.assertIn("created class 'Logged'", entry.summary)
+        self.assertEqual(entry.actor, self.teacher)
+
+
+class ManageAssignTests(TestCase):
+    def setUp(self):
+        self.admin = make_user('as_adm', 'admin', is_staff=True, is_superuser=True)
+        self.teacher = make_user('as_tch', 'teacher')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher)
+        self.student = make_user('as_stu', 'student')
+        self.student_profile = StudentProfile.objects.create(user=self.student)
+        TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+        self.study_class = StudyClass.objects.create(
+            name='7/13', teacher=self.teacher_profile)
+        self.study_class.students.add(self.student_profile)
+        course = Course.objects.create(title='AS Course')
+        chapter = Chapter.objects.create(course=course, title='AS Ch', order=1)
+        self.lesson = Lesson.objects.create(
+            chapter=chapter, title='AS Lesson', order=1)
+
+    def test_assign_by_class(self):
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('manage_assign'), {
+            'lesson': self.lesson.pk, 'target': 'class',
+            'study_class': self.study_class.pk,
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertTrue(StudentLesson.objects.filter(
+            student=self.student_profile, lesson=self.lesson).exists())
+
+    def test_assign_by_individual_students(self):
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('manage_assign'), {
+            'lesson': self.lesson.pk, 'target': 'students',
+            'students': [self.student_profile.pk],
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertTrue(StudentLesson.objects.filter(
+            student=self.student_profile, lesson=self.lesson).exists())
+
+    def test_assign_is_idempotent(self):
+        self.client.force_login(self.teacher)
+        url = reverse('manage_assign')
+        data = {'lesson': self.lesson.pk, 'target': 'class',
+                'study_class': self.study_class.pk}
+        self.client.post(url, data)
+        self.client.post(url, data)
+        self.assertEqual(StudentLesson.objects.filter(
+            lesson=self.lesson).count(), 1)
+
+    def test_teacher_cannot_assign_to_other_teachers_class(self):
+        other = make_user('as_tch2', 'teacher')
+        other_profile = TeacherProfile.objects.create(user=other)
+        other_class = StudyClass.objects.create(
+            name='X', teacher=other_profile)
+        self.client.force_login(self.teacher)
+        r = self.client.post(reverse('manage_assign'), {
+            'lesson': self.lesson.pk, 'target': 'class',
+            'study_class': other_class.pk,
+        })
+        # Rejected by the scoped queryset -> form error, no assignment.
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(StudentLesson.objects.exists())
+
+    def test_assign_requires_admin_or_teacher(self):
+        student = make_user('as_stu2', 'student')
+        self.client.force_login(student)
+        r = self.client.get(reverse('manage_assign'))
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, reverse('dashboard'))
+
+    def test_max_two_parents_per_student(self):
+        self.client.force_login(self.admin)
+        parent1 = make_user('as_par1', 'parent')
+        p1 = ParentProfile.objects.create(user=parent1)
+        parent2 = make_user('as_par2', 'parent')
+        p2 = ParentProfile.objects.create(user=parent2)
+        parent3 = make_user('as_par3', 'parent')
+        p3 = ParentProfile.objects.create(user=parent3)
+        add = reverse('manage_add', kwargs={'model_name': 'studentparent'})
+        self.client.post(add, {'student': self.student_profile.pk,
+                               'parent': p1.pk})
+        self.client.post(add, {'student': self.student_profile.pk,
+                               'parent': p2.pk})
+        r = self.client.post(add + '?modal=1',
+                             {'student': self.student_profile.pk,
+                              'parent': p3.pk},
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'at most 2 parents')
+        self.assertEqual(StudentParent.objects.filter(
+            student=self.student_profile).count(), 2)
+
+
+class ChangeLogTests(TestCase):
+    def setUp(self):
+        from .models import ChangeLog
+        self.ChangeLog = ChangeLog
+        self.admin = make_user('hg_adm', 'admin', is_staff=True, is_superuser=True)
+        self.teacher = make_user('hg_tch', 'teacher')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher)
+        self.student = make_user('hg_stu', 'student')
+        self.student_profile = StudentProfile.objects.create(user=self.student)
+        TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+
+    def _log(self, actor, summary, **kwargs):
+        from .changelog import log_change
+        return log_change(actor, 'relationship', 'link', summary, **kwargs)
+
+    def test_crud_writes_specific_entries(self):
+        self.client.force_login(self.admin)
+        self.client.post(reverse('manage_add', kwargs={'model_name': 'course'}),
+                         {'title': 'Logged Course'})
+        entry = self.ChangeLog.objects.latest('created_at')
+        self.assertEqual(entry.category, 'content')
+        self.assertIn("created course 'Logged Course'", entry.summary)
+
+    def test_role_change_logged_as_role(self):
+        self.client.force_login(self.admin)
+        url = reverse('manage_edit',
+                      kwargs={'model_name': 'user', 'pk': self.student.pk})
+        self.client.post(url, {'role': 'teacher', 'email': '',
+                               'first_name': '', 'last_name': '',
+                               'phone_number': '', 'is_active': 'on'})
+        entry = self.ChangeLog.objects.latest('created_at')
+        self.assertEqual(entry.category, 'role')
+        self.assertIn('from Student to Teacher', entry.summary)
+
+    def test_teacher_sees_own_and_related_admin_entries(self):
+        from .changelog import changelog_for
+        # Teacher's own entry.
+        self._log(self.teacher, 'teacher did X')
+        # Admin entry related to the teacher's student.
+        self._log(self.admin, 'admin did Y',
+                  related_student=self.student_profile)
+        # Admin entry unrelated.
+        other = make_user('hg_tch2', 'teacher')
+        self._log(self.admin, 'admin did Z', related_teacher=None)
+        visible = list(changelog_for(self.teacher))
+        summaries = [e.summary for e in visible]
+        self.assertIn('teacher did X', summaries)
+        self.assertIn('admin did Y', summaries)
+        self.assertNotIn('admin did Z', summaries)
+
+    def test_admin_sees_everything(self):
+        from .changelog import changelog_for
+        self._log(self.teacher, 'teacher did X')
+        self._log(self.admin, 'admin did Z')
+        self.assertEqual(changelog_for(self.admin).count(), 2)
+
+    def test_changelog_page_requires_admin_or_teacher(self):
+        student = make_user('hg_stu2', 'student')
+        self.client.force_login(student)
+        r = self.client.get(reverse('changelog_list'))
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, reverse('dashboard'))
+
+    def test_dashboard_shows_changelog(self):
+        self.client.force_login(self.admin)
+        self._log(self.admin, 'visible entry')
+        r = self.client.get(reverse('dashboard'))
+        self.assertContains(r, 'Change History')
+        self.assertContains(r, 'visible entry')
+        self.assertNotContains(r, 'My Account')
+
+    def test_teacher_dashboard_shows_changelog(self):
+        self.client.force_login(self.teacher)
+        self._log(self.teacher, 'teacher entry')
+        r = self.client.get(reverse('dashboard'))
+        self.assertContains(r, 'Change History')
+        self.assertContains(r, 'teacher entry')
+
+
+class ManageFilterTests(TestCase):
+    def setUp(self):
+        self.admin = make_user('fl_adm', 'admin', is_staff=True, is_superuser=True)
+        self.client.force_login(self.admin)
+        self.course = Course.objects.create(title='Alpha Course')
+        Course.objects.create(title='Beta Course')
+        make_user('fl_zed', 'student', email='zed@example.com')
+
+    def test_learning_filter(self):
+        r = self.client.get(reverse('manage_center') + '?q_learning=alpha')
+        self.assertContains(r, 'Alpha Course')
+        self.assertNotContains(r, 'Beta Course')
+
+    def test_people_search_and_role_filter(self):
+        r = self.client.get(
+            reverse('manage_center') + '?tab=people&q_people=zed')
+        self.assertContains(r, 'fl_zed')
+        r = self.client.get(
+            reverse('manage_center') + '?tab=people&role=admin')
+        self.assertContains(r, 'fl_adm')
+        self.assertNotContains(r, 'fl_zed')
+
+    def test_links_filter(self):
+        teacher = make_user('fl_tch', 'teacher')
+        tp = TeacherProfile.objects.create(user=teacher)
+        student = make_user('fl_stu', 'student')
+        sp = StudentProfile.objects.create(user=student)
+        TeacherStudent.objects.create(teacher=tp, student=sp)
+        r = self.client.get(
+            reverse('manage_center') + '?tab=links&q_links=fl_tch')
+        self.assertContains(r, 'fl_tch')
+        self.assertContains(r, 'fl_stu')
+
+
+class MiscBehaviorTests(TestCase):
+    def setUp(self):
+        self.admin = make_user('mb_adm', 'admin', is_staff=True, is_superuser=True)
+
+    def test_login_redirects_to_home(self):
+        r = self.client.post(reverse('login'),
+                             {'username': 'mb_adm', 'password': 'pw123456'})
+        self.assertRedirects(r, reverse('home'))
+
+    def test_timestamps_use_vietnam_timezone(self):
+        from django.conf import settings
+        self.assertEqual(settings.TIME_ZONE, 'Asia/Ho_Chi_Minh')
+
+    def test_admin_nav_has_no_standalone_speaking_lessons(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center'))
+        # Management link present; the standalone nav item is gone for admin
+        # (lessons live in the Management Center's Speaking Lessons tab).
+        self.assertContains(r, '&#128218; Management</a>')
+        self.assertNotContains(r, '>Speaking Lessons</a>')
+        self.assertContains(r, '&#127908; Speaking Lessons</button>')
+
+    def test_remember_me_cookie_persists(self):
+        # Checked -> the session cookie carries an expiry (survives restart).
+        r = self.client.post(reverse('login'),
+                             {'username': 'mb_adm', 'password': 'pw123456',
+                              'remember_me': 'on'})
+        self.assertRedirects(r, reverse('home'))
+        cookie = r.cookies.get('sessionid')
+        self.assertTrue(cookie.get('expires'))
+
+    def test_without_remember_me_cookie_is_session_only(self):
+        r = self.client.post(reverse('login'),
+                             {'username': 'mb_adm', 'password': 'pw123456'})
+        self.assertRedirects(r, reverse('home'))
+        cookie = r.cookies.get('sessionid')
+        self.assertFalse(cookie.get('expires'))
+
+    def test_logout_destroys_session_even_when_remembered(self):
+        self.client.post(reverse('login'),
+                         {'username': 'mb_adm', 'password': 'pw123456',
+                          'remember_me': 'on'})
+        self.assertIn('_auth_user_id', self.client.session)
+        self.client.get(reverse('logout'))
+        self.assertNotIn('_auth_user_id', self.client.session)

@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from .admin_site import esp_admin_site
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import (
+    ChangeLog,
+    StudyClass,
     User, TeacherProfile, StudentProfile, ParentProfile,
     StudentParent, Course, Chapter, Lesson, Exercise,
     TeacherStudent, SpeakingAttempt, StudentLesson
@@ -93,3 +95,21 @@ class StudentLessonAdmin(admin.ModelAdmin):
 class SpeakingAttemptAdmin(admin.ModelAdmin):
     list_display = ('student', 'exercise', 'created_at')
     list_filter = ('created_at',)
+
+@admin.register(StudyClass, site=esp_admin_site)
+class StudyClassAdmin(admin.ModelAdmin):
+    list_display = ('name', 'teacher', 'created_at')
+    list_filter = ('teacher', 'created_at')
+    search_fields = ('name', 'teacher__user__username')
+
+@admin.register(ChangeLog, site=esp_admin_site)
+class ChangeLogAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'actor', 'category', 'action', 'summary')
+    list_filter = ('category', 'action', 'created_at')
+    search_fields = ('summary', 'actor__username')
+    readonly_fields = ('actor', 'category', 'action', 'summary',
+                       'target_user', 'related_teacher', 'related_student',
+                       'created_at')
+
+    def has_add_permission(self, request):
+        return False

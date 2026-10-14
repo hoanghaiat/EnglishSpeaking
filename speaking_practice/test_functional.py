@@ -171,7 +171,8 @@ class AuthFieldTest(WorldTestCase):
     def test_login_valid(self):
         r = self.client.post(self.urls['login'],
                              {'username': 'w_student1', 'password': PW})
-        self.assertEqual(r.status_code, 302)
+        # Every role lands on Home after a successful login.
+        self.assertRedirects(r, reverse('home'))
 
     def test_login_wrong_password(self):
         r = self.client.post(self.urls['login'],
@@ -501,7 +502,8 @@ class ProfilePageTests(WorldTestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Granted permissions')
         self.assertContains(r, 'Management Center')
-        self.assertContains(r, 'Staff / Superuser')
+        self.assertContains(r, 'Staff status')
+        self.assertContains(r, 'Superuser status')
         self.assertContains(r, 'Last login')
 
     def test_teacher_profile_shows_bio_and_capabilities(self):
@@ -529,4 +531,4 @@ class ToastPositionTests(WorldTestCase):
     def test_toasts_are_centered(self):
         self.login('w_student1')
         r = self.client.get(reverse('dashboard'))
-        self.assertContains(r, 'left: 50%; transform: translateX(-50%)')
+        self.assertContains(r, 'top: 50%; left: 50%; transform: translate(-50%, -50%)')

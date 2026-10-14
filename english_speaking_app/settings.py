@@ -134,11 +134,21 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# All timestamps shown in the UI use Vietnam time (UTC+7).
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 
 USE_TZ = True
+
+
+# Session / Remember-me behaviour.
+# - "Remember me" checked  -> persistent session (SESSION_COOKIE_AGE).
+# - "Remember me" unchecked -> session cookie expires with the browser.
+# - Explicit logout always destroys the session, even a remembered one.
+SESSION_COOKIE_AGE = 1209600  # 2 weeks, in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = False
 
 
 # Static files (CSS, JavaScript, Images)

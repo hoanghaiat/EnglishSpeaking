@@ -28,8 +28,10 @@
                     <dd class="col-sm-8">{{ user.phone_number|default:"&mdash;" }}</dd>
                     <dt class="col-sm-4">Role</dt>
                     <dd class="col-sm-8 text-capitalize">{{ user.get_role_display }}</dd>
-                    <dt class="col-sm-4">Staff / Superuser</dt>
-                    <dd class="col-sm-8">{% if user.is_staff %}Yes{% else %}No{% endif %} / {% if user.is_superuser %}Yes{% else %}No{% endif %}</dd>
+                    <dt class="col-sm-4">Staff status</dt>
+                    <dd class="col-sm-8">{% if user.is_staff %}<span class="badge bg-success">Yes &mdash; can access Django admin</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</dd>
+                    <dt class="col-sm-4">Superuser status</dt>
+                    <dd class="col-sm-8">{% if user.is_superuser %}<span class="badge bg-danger">Yes &mdash; unrestricted access</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</dd>
                     <dt class="col-sm-4">Joined</dt>
                     <dd class="col-sm-8">{{ user.date_joined|date:"M d, Y H:i" }}</dd>
                     <dt class="col-sm-4">Last login</dt>

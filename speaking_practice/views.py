@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import Max
+from .changelog import changelog_for, log_change
 from .models import (
     User, StudentProfile, TeacherProfile, ParentProfile,
     StudentLesson, Lesson, Exercise, SpeakingAttempt, Chapter
@@ -40,6 +41,7 @@ def dashboard(request):
             'student_count': StudentProfile.objects.count(),
             'teacher_count': TeacherProfile.objects.count(),
             'parent_count': ParentProfile.objects.count(),
+            'changelog': changelog_for(user, limit=15),
         }
         return render(request, 'dashboard_admin.html', context)
 
@@ -52,7 +54,11 @@ def dashboard(request):
             assigned_teachers__teacher=teacher_profile
         ).distinct()
         lessons = teacher_profile.lessons.all()
-        return render(request, 'dashboard_teacher.html', {'students': students, 'lessons': lessons})
+        return render(request, 'dashboard_teacher.html', {
+            'students': students,
+            'lessons': lessons,
+            'changelog': changelog_for(user, limit=10),
+        })
 
     elif user.role == 'student':
         student_profile = _profile_or_none(user, 'student_profile')
@@ -310,6 +316,9 @@ def teacher_create_lesson(request):
             except IntegrityError:
                 error = f'Order {order} is already used in this chapter. Please choose another order.'
             else:
+                log_change(request.user, 'content', 'create',
+                           f"{request.user.username} created lesson "
+                           f"'{lesson.title}'.")
                 messages.success(request, 'Lesson created successfully!')
                 return redirect('lesson_detail', lesson_id=lesson.id)
 
@@ -355,6 +364,9 @@ def teacher_edit_lesson(request, lesson_id):
         lesson.description = request.POST.get('description', '').strip()
         lesson.save()
 
+        log_change(request.user, 'content', 'update',
+                   f"{request.user.username} updated lesson "
+                   f"'{lesson.title}'.")
         messages.success(request, 'Lesson updated successfully!')
         return redirect('lesson_detail', lesson_id=lesson.id)
 
@@ -382,7 +394,10 @@ def teacher_delete_lesson(request, lesson_id):
         return redirect('dashboard')
 
     if request.method == 'POST':
+        title = lesson.title
         lesson.delete()
+        log_change(request.user, 'content', 'delete',
+                   f"{request.user.username} deleted lesson '{title}'.")
         messages.success(request, 'Lesson deleted successfully!')
         return redirect('lesson_list')
 

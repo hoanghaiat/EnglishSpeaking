@@ -20,8 +20,12 @@
     <nav class="esp-topnav-links" aria-label="Primary">
         <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'dashboard' %}">My Dashboard</a>
+        {% if user.role != 'admin' %}
         <a href="{% url 'lesson_list' %}">Speaking Lessons</a>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'teacher' %}
         <a href="{% url 'manage_center' %}">&#128218; Management</a>
+        {% endif %}
         <a href="{% url 'profile' %}">My Profile</a>
     </nav>
     {% endif %}

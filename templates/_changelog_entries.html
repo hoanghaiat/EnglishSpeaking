@@ -1,0 +1,15 @@
+{# Shared changelog entries. Expects 'entries'. Timestamps render in Asia/Ho_Chi_Minh. #}
+{% for entry in entries %}
+<div class="d-flex gap-2 align-items-start mb-2">
+    <div class="flex-shrink-0" style="min-width: 150px;">
+        <span class="badge bg-secondary">{{ entry.get_category_display }}</span>
+        <span class="badge {% if entry.action == 'create' or entry.action == 'link' %}bg-success{% elif entry.action == 'delete' or entry.action == 'unlink' %}bg-danger{% elif entry.action == 'update' %}bg-primary{% else %}bg-info text-dark{% endif %}">{{ entry.get_action_display }}</span>
+    </div>
+    <div class="flex-grow-1">
+        <div>{{ entry.summary }}</div>
+        <small class="text-muted">{{ entry.created_at|date:"d/m/Y H:i" }} &middot; by {{ entry.actor.username|default:"system" }}</small>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted mb-0">No changes yet.</p>
+{% endfor %}

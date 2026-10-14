@@ -201,3 +201,75 @@ class SpeakingAttempt(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username} - {self.exercise.title}"
+
+class StudyClass(models.Model):
+    """
+    A named class (e.g. "7/13") created by a teacher, grouping students.
+    Teachers manage their own classes; admins manage all classes.
+    """
+    name = models.CharField(max_length=100)
+    teacher = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE,
+                                related_name='study_classes')
+    students = models.ManyToManyField(StudentProfile, related_name='study_classes',
+                                      blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ('teacher', 'name')
+        verbose_name_plural = 'study classes'
+
+    def __str__(self):
+        return f"{self.name} ({self.teacher.user.username})"
+
+
+class ChangeLog(models.Model):
+    """
+    Human-readable history of management changes (users, roles,
+    relationships, classes, assignments, content). Written explicitly by
+    the management views — never generic.
+
+    Visibility:
+    - Admins see everything.
+    - Teachers see their own entries plus admin entries related to them
+      (their classes / their students).
+    """
+    CATEGORY_CHOICES = [
+        ('user', 'User'),
+        ('role', 'Role'),
+        ('relationship', 'Relationship'),
+        ('class', 'Class'),
+        ('assignment', 'Assignment'),
+        ('practice', 'Practice'),
+        ('content', 'Content'),
+    ]
+    ACTION_CHOICES = [
+        ('create', 'Created'),
+        ('update', 'Updated'),
+        ('delete', 'Deleted'),
+        ('link', 'Linked'),
+        ('unlink', 'Unlinked'),
+    ]
+
+    actor = models.ForeignKey('User', on_delete=models.SET_NULL, null=True,
+                              related_name='change_logs')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    summary = models.CharField(max_length=255)
+    target_user = models.ForeignKey('User', on_delete=models.SET_NULL,
+                                    null=True, blank=True,
+                                    related_name='change_logs_about')
+    related_teacher = models.ForeignKey(
+        TeacherProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='change_logs')
+    related_student = models.ForeignKey(
+        StudentProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='change_logs')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.created_at:%Y-%m-%d %H:%M}] {self.summary}"
