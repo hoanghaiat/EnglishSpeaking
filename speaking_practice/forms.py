@@ -160,7 +160,7 @@ class ManagedUserCreateForm(_BootstrapModelForm):
 
     password1 = forms.CharField(
         label='Password', widget=forms.PasswordInput,
-        help_text='Minimum 8 characters.')
+        help_text='Minimum 6 characters.')
     password2 = forms.CharField(
         label='Confirm password', widget=forms.PasswordInput)
 
@@ -300,8 +300,12 @@ class StudyClassForm(_BootstrapModelForm):
     def _get_validation_exclusions(self):
         # 'teacher' is set by the view (teachers), not by a form field, so
         # keep it in unique validation: names must be unique per teacher.
+        # But when the teacher field itself failed form validation (e.g. left
+        # empty), leave it excluded so the model doesn't pile a technical
+        # "cannot be null" error on top of the form's own message.
         exclude = super()._get_validation_exclusions()
-        exclude.discard('teacher')
+        if 'teacher' not in self._errors:
+            exclude.discard('teacher')
         return exclude
 
 

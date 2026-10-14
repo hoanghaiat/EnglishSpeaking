@@ -1159,3 +1159,37 @@ class ManageLinksUiTests(TestCase):
             checker.feed(r.content.decode())
             self.assertEqual(checker.bad, [], role)
             self.client.logout()
+
+    def test_class_add_empty_teacher_single_error(self):
+        # Empty teacher must show only the form's "required" error, not a
+        # second technical "cannot be null" from model validation.
+        self.client.force_login(self.admin)
+        r = self.client.post(reverse('class_add'), {'name': '', 'teacher': ''},
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        content = r.content.decode()
+        self.assertIn('This field is required.', content)
+        self.assertNotIn('cannot be null', content)
+
+    def test_class_add_duplicate_name_per_teacher_rejected(self):
+        # Unique-per-teacher validation still works (teacher kept in the
+        # unique check when it has no form error).
+        from .models import StudyClass
+        StudyClass.objects.create(name='7/13', teacher=self.teacher_profile)
+        self.client.force_login(self.admin)
+        r = self.client.post(
+            reverse('class_add'),
+            {'name': '7/13', 'teacher': str(self.teacher_profile.pk)},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('already exists', r.content.decode().lower())
+
+    def test_user_add_password_help_text_matches_policy(self):
+        # Password policy is min-length 6; the help text must say so.
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_add', kwargs={'model_name': 'user'}),
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        content = r.content.decode()
+        self.assertIn('Minimum 6 characters', content)
+        self.assertNotIn('Minimum 8 characters', content)

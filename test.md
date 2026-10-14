@@ -10,7 +10,32 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Fix: unbalanced divs leaked People table into all /manage/ tabs (2026-10-14)
+## <next> — Form audit: rà soát toàn bộ 18 modal của /manage/ (2026-10-14)
+
+Rà soát bằng headless Chromium (admin + teacher): mở từng modal add/edit/delete
+của course/chapter/lesson/exercise/user/class/teacher-student/student-parent/
+assign-lesson, submit form trống và sai để xem validation, toggle target ở
+assign modal, full-page fallback khi không có JS, và scoped view của teacher.
+
+Kết quả:
+- 16/18 modal render đẹp ngay; validation errors hiện trong modal, không reload
+  trang; assign toggle class/students hoạt động; teacher chỉ thấy field của mình.
+- Fix 2 lỗi tìm được:
+  1. Help text "Minimum 8 characters." đã cũ (policy hiện tại là tối thiểu 6) →
+     sửa thành "Minimum 6 characters."
+  2. Class add submit trống hiện 2 lỗi trùng cho Teacher ("This field is
+     required." + "This field cannot be null.") — do fix round 4
+     (`exclude.discard('teacher')`) re-include teacher vào cả null-check.
+     Sửa: chỉ discard khi teacher không có lỗi form; unique-per-teacher vẫn giữ.
+- 4 regression tests mới: `test_class_add_empty_teacher_single_error`,
+  `test_class_add_duplicate_name_per_teacher_rejected`,
+  `test_user_add_password_help_text_matches_policy`
+  (+ `test_tab_panes_nested_inside_tab_content` từ fix trước).
+- `manage.py check`: no issues.
+- Full suite: **183/183 passed** (Django 5.2.17).
+- `test_manage`: **108/108 passed** (Django 4.x).
+
+## 1e35354 — Fix: unbalanced divs leaked People table into all /manage/ tabs (2026-10-14)
 
 Bug: 4 `</div>` thừa trong Links & Practice subpanes (round 5) khiến
 `#pane-people` và `#pane-lessons` rớt ra ngoài `.tab-content` → table user và
