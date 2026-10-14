@@ -10,7 +10,7 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Toast top-center, student dropdown, seed demo data (2026-10-14)
+## d940829 — Toast top-center, student dropdown, seed demo data (2026-10-14)
 
 Theo feedback của Hoàng trên screenshot:
 1. **Toast**: chuyển từ giữa màn hình về top-center dưới navbar (`top: 76px`);
