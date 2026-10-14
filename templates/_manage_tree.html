@@ -1,8 +1,4 @@
-{% extends 'base.html' %}
-
-{% block title %}Learning Content Manager{% endblock %}
-
-{% block content %}
+{# Learning Content tree — shared by the Management Center tab. Expects 'tree'. #}
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
     <div>
         <h2>&#128218; Learning Content</h2>
@@ -114,5 +110,3 @@
     <div class="alert alert-info">No courses yet. <a data-esp-modal href="{% url 'manage_add' model_name='course' %}">Create your first course</a> to start building lessons.</div>
 {% endfor %}
 
-{% include '_esp_modal.html' %}
-{% endblock %}

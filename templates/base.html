@@ -73,9 +73,9 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="mgmtDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">&#128218; Management</a>
                             <ul class="dropdown-menu" aria-labelledby="mgmtDropdown">
-                                <li><a class="dropdown-item" href="{% url 'manage_content' %}">&#128218; Learning Content</a></li>
-                                <li><a class="dropdown-item" href="{% url 'admin:speaking_practice_user_changelist' %}">&#128101; People</a></li>
-                                <li><a class="dropdown-item" href="{% url 'admin:speaking_practice_teacherstudent_changelist' %}">&#128279; Links &amp; Practice</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#learning">&#128218; Learning Content</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#people">&#128101; People</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#links">&#128279; Links &amp; Practice</a></li>
                             </ul>
                         </li>
                         {% endif %}

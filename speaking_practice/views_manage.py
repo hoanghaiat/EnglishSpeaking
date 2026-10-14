@@ -11,8 +11,16 @@ from django.db.models import Max
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ChapterForm, CourseForm, ExerciseForm, LessonForm
-from .models import Chapter, Course, Exercise, Lesson, SpeakingAttempt
+from .forms import (
+    ChapterForm, CourseForm, ExerciseForm, LessonForm,
+    ManagedUserCreateForm, ManagedUserEditForm,
+    StudentLessonForm, StudentParentForm, TeacherStudentForm,
+)
+from .models import (
+    Chapter, Course, Exercise, Lesson, SpeakingAttempt,
+    StudentLesson, StudentParent, TeacherStudent,
+    User,
+)
 
 MANAGE_MODELS = {
     'course': {
@@ -30,6 +38,32 @@ MANAGE_MODELS = {
     'exercise': {
         'model': Exercise, 'form': ExerciseForm, 'label': 'Exercise',
         'parent_field': 'lesson', 'parent_model': Lesson, 'parent_label': 'Lesson',
+    },
+    # --- People and Links & Practice (Management Center tabs) ---
+    'user': {
+        'model': User, 'form': ManagedUserCreateForm,
+        'form_edit': ManagedUserEditForm, 'label': 'User',
+        'parent_field': None, 'parent_model': None, 'parent_label': None,
+    },
+    'teacherstudent': {
+        'model': TeacherStudent, 'form': TeacherStudentForm,
+        'label': 'Teacher\u2013Student link',
+        'parent_field': None, 'parent_model': None, 'parent_label': None,
+    },
+    'studentparent': {
+        'model': StudentParent, 'form': StudentParentForm,
+        'label': 'Student\u2013Parent link',
+        'parent_field': None, 'parent_model': None, 'parent_label': None,
+    },
+    'studentlesson': {
+        'model': StudentLesson, 'form': StudentLessonForm,
+        'label': 'Assigned lesson',
+        'parent_field': None, 'parent_model': None, 'parent_label': None,
+    },
+    'speakingattempt': {
+        'model': SpeakingAttempt, 'form': None, 'label': 'Speaking attempt',
+        'parent_field': None, 'parent_model': None, 'parent_label': None,
+        'allow_add': False,
     },
 }
 
@@ -98,11 +132,43 @@ def _cascade_info(obj, model_name):
         attempts = obj.speaking_attempts.count()
         if attempts:
             info.append(f'{attempts} speaking attempt(s)')
+    elif model_name == 'user':
+        for rel, kind in (('teacher_profile', 'teacher'),
+                          ('student_profile', 'student'),
+                          ('parent_profile', 'parent')):
+            profile = getattr(obj, rel, None)
+            if profile is None:
+                continue
+            info.append(f'{kind} profile')
+            if kind == 'teacher':
+                if profile.lessons.count():
+                    info.append(f'{profile.lessons.count()} taught lesson(s) '
+                                '(teacher will be cleared)')
+                if profile.assigned_students.count():
+                    info.append(f'{profile.assigned_students.count()} '
+                                'teacher\u2013student link(s)')
+            if kind == 'student':
+                if profile.assigned_teachers.count():
+                    info.append(f'{profile.assigned_teachers.count()} '
+                                'teacher assignment(s)')
+                if profile.assigned_lessons.count():
+                    info.append(f'{profile.assigned_lessons.count()} '
+                                'assigned lesson(s)')
+                if profile.speaking_attempts.count():
+                    info.append(f'{profile.speaking_attempts.count()} '
+                                'speaking attempt(s)')
+                if profile.parent_links.count():
+                    info.append(f'{profile.parent_links.count()} '
+                                'student\u2013parent link(s)')
+            if kind == 'parent' and profile.student_links.count():
+                info.append(f'{profile.student_links.count()} '
+                            'student\u2013parent link(s)')
     return info
 
 
 @login_required
-def content_hub(request):
+def management_center(request):
+    """One page with three tabs: Learning Content, People, Links & Practice."""
     denied = _admin_or_redirect(request)
     if denied:
         return denied
@@ -130,7 +196,25 @@ def content_hub(request):
             'exercise_count': exercise_total,
         })
 
-    return render(request, 'manage_content.html', {'tree': tree})
+    users = User.objects.order_by('username').select_related()
+    teacher_students = TeacherStudent.objects.select_related(
+        'teacher__user', 'student__user').order_by('-assigned_at')[:200]
+    student_parents = StudentParent.objects.select_related(
+        'student__user', 'parent__user').order_by('-id')[:200]
+    student_lessons = StudentLesson.objects.select_related(
+        'student__user', 'lesson__chapter__course').order_by(
+            '-assigned_at')[:200]
+    recent_attempts = SpeakingAttempt.objects.select_related(
+        'student__user', 'exercise__lesson').order_by('-created_at')[:50]
+
+    return render(request, 'manage_center.html', {
+        'tree': tree,
+        'users': users,
+        'teacher_students': teacher_students,
+        'student_parents': student_parents,
+        'student_lessons': student_lessons,
+        'recent_attempts': recent_attempts,
+    })
 
 
 @login_required
@@ -139,6 +223,8 @@ def manage_add(request, model_name):
     denied = _admin_or_redirect(request)
     if denied:
         return denied
+    if not cfg.get('allow_add', True):
+        raise Http404(f'Cannot add: {model_name}')
 
     parent = None
     if cfg['parent_field']:
@@ -153,7 +239,7 @@ def manage_add(request, model_name):
             messages.success(request, f"{cfg['label']} '{obj}' created.")
             if _is_modal(request):
                 return JsonResponse({'ok': True})
-            return redirect('manage_content')
+            return redirect('manage_center')
     else:
         initial = {}
         if parent:
@@ -179,16 +265,23 @@ def manage_edit(request, model_name, pk):
         return denied
 
     obj = get_object_or_404(cfg['model'], pk=pk)
+    form_class = cfg.get('form_edit') or cfg['form']
     if request.method == 'POST':
-        form = cfg['form'](request.POST, request.FILES, instance=obj)
+        form = form_class(request.POST, request.FILES, instance=obj)
         if form.is_valid():
-            form.save()
-            messages.success(request, f"{cfg['label']} '{obj}' updated.")
-            if _is_modal(request):
-                return JsonResponse({'ok': True})
-            return redirect('manage_content')
+            if (model_name == 'user' and obj == request.user
+                    and (form.cleaned_data.get('role') != 'admin'
+                         or not form.cleaned_data.get('is_active'))):
+                form.add_error(
+                    None, 'You cannot remove your own admin access.')
+            else:
+                form.save()
+                messages.success(request, f"{cfg['label']} '{obj}' updated.")
+                if _is_modal(request):
+                    return JsonResponse({'ok': True})
+                return redirect('manage_center')
     else:
-        form = cfg['form'](instance=obj)
+        form = form_class(instance=obj)
 
     template = 'manage_form_modal.html' if _is_modal(request) else 'manage_form.html'
     return render(request, template, {
@@ -209,13 +302,22 @@ def manage_delete(request, model_name, pk):
     obj = get_object_or_404(cfg['model'], pk=pk)
     cascade = _cascade_info(obj, model_name)
 
+    if model_name == 'user' and obj == request.user:
+        messages.error(request, 'You cannot delete your own account.')
+        if _is_modal(request):
+            return render(request, 'manage_delete_modal.html', {
+                'obj': obj, 'label': cfg['label'], 'cascade': cascade,
+                'error': 'You cannot delete your own account.',
+            })
+        return redirect('manage_center')
+
     if request.method == 'POST':
         name = str(obj)
         obj.delete()
         messages.success(request, f"{cfg['label']} '{name}' deleted.")
         if _is_modal(request):
             return JsonResponse({'ok': True})
-        return redirect('manage_content')
+        return redirect('manage_center')
 
     template = ('manage_delete_modal.html'
                 if _is_modal(request) else 'manage_confirm_delete.html')

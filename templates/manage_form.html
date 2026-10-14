@@ -7,7 +7,7 @@
     <div class="col-lg-8 mx-auto">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'manage_content' %}">Learning Content</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'manage_center' %}">Management Center</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{% if mode == 'add' %}Add{% else %}Edit{% endif %} {{ label }}</li>
             </ol>
         </nav>
@@ -30,7 +30,7 @@
                     {% include '_form_fields.html' %}
 
                     <button type="submit" class="btn btn-primary">&#10003; {% if mode == 'add' %}Create {{ label }}{% else %}Save Changes{% endif %}</button>
-                    <a href="{% url 'manage_content' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{% url 'manage_center' %}" class="btn btn-outline-secondary">Cancel</a>
                 </form>
             </div>
         </div>

@@ -1,4 +1,4 @@
-"""Tests for the admin-only Learning Content Manager (manage/content/)."""
+"""Tests for the Management Center (manage/) and its modal CRUD."""
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
@@ -9,8 +9,12 @@ from .models import (
     Exercise,
     Lesson,
     ParentProfile,
+    SpeakingAttempt,
+    StudentLesson,
+    StudentParent,
     StudentProfile,
     TeacherProfile,
+    TeacherStudent,
     User,
 )
 
@@ -38,7 +42,7 @@ class ManageContentAccessTests(TestCase):
         self.exercise = Exercise.objects.create(
             lesson=self.lesson, title='MC Exercise', order=1)
 
-        self.hub_url = reverse('manage_content')
+        self.hub_url = reverse('manage_center')
 
     def test_anonymous_redirected_to_login(self):
         r = self.client.get(self.hub_url)
@@ -163,6 +167,27 @@ class ManageContentAccessTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertNotContains(r, 'data-esp-modal-form')
 
+    def test_old_content_url_redirects_to_center(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/manage/content/')
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, '/manage/')
+
+    def test_center_has_three_tabs(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'id="mgmtTabs"')
+        self.assertContains(r, 'Learning Content')
+        self.assertContains(r, 'id="pane-people"')
+        self.assertContains(r, 'id="pane-links"')
+        self.assertContains(r, 'Recent Speaking Attempts')
+
+    def test_center_forbidden_for_non_admin(self):
+        self.client.force_login(self.teacher)
+        r = self.client.get(reverse('manage_center'))
+        self.assertEqual(r.status_code, 302)
+
     def test_admin_logout_goes_straight_to_login(self):
         self.client.force_login(self.admin)
         r = self.client.post('/admin/logout/')
@@ -203,7 +228,7 @@ class ManageContentAccessTests(TestCase):
 
     def test_site_header_management_dropdown(self):
         self.client.force_login(self.admin)
-        r = self.client.get('/manage/content/')
+        r = self.client.get(reverse('manage_center'))
         self.assertContains(r, 'mgmtDropdown')
         self.assertContains(r, 'Learning Content')
         self.assertNotContains(r, '&#128218; Manage Content</a>')
@@ -238,7 +263,7 @@ class ManageContentCrudTests(TestCase):
         self.chapter = Chapter.objects.create(course=self.course, title='C Chapter', order=1)
         self.lesson = Lesson.objects.create(chapter=self.chapter, title='C Lesson', order=1)
         self.exercise = Exercise.objects.create(lesson=self.lesson, title='C Exercise', order=1)
-        self.hub_url = reverse('manage_content')
+        self.hub_url = reverse('manage_center')
 
     def test_add_course(self):
         r = self.client.post(
@@ -309,3 +334,186 @@ class ManageContentCrudTests(TestCase):
         url = reverse('manage_edit', kwargs={'model_name': 'course', 'pk': 99999})
         r = self.client.get(url)
         self.assertEqual(r.status_code, 404)
+
+
+class ManagePeopleTests(TestCase):
+    """People tab: user add/edit/delete through the modal CRUD."""
+
+    def setUp(self):
+        self.admin = make_user('p_adm', 'admin', is_staff=True, is_superuser=True)
+        self.client.force_login(self.admin)
+
+    def _add_url(self):
+        return reverse('manage_add', kwargs={'model_name': 'user'})
+
+    def test_add_user_creates_matching_profile(self):
+        r = self.client.post(self._add_url(), {
+            'username': 'p_new_teacher',
+            'password1': 'pw12345678', 'password2': 'pw12345678',
+            'role': 'teacher', 'email': 't@example.com',
+            'first_name': 'New', 'last_name': 'Teacher',
+            'phone_number': '0123', 'is_active': 'on',
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        user = User.objects.get(username='p_new_teacher')
+        self.assertTrue(user.check_password('pw12345678'))
+        self.assertTrue(hasattr(user, 'teacher_profile'))
+
+    def test_add_user_password_mismatch(self):
+        r = self.client.post(self._add_url() + '?modal=1', {
+            'username': 'p_bad', 'password1': 'pw12345678',
+            'password2': 'different', 'role': 'student',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "don&#x27;t match")
+        self.assertFalse(User.objects.filter(username='p_bad').exists())
+
+    def test_edit_user_role_creates_new_profile(self):
+        student = make_user('p_stu', 'student')
+        StudentProfile.objects.create(user=student)
+        url = reverse('manage_edit', kwargs={'model_name': 'user', 'pk': student.pk})
+        r = self.client.post(url, {
+            'role': 'teacher', 'email': '', 'first_name': '',
+            'last_name': '', 'phone_number': '', 'is_active': 'on',
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        student.refresh_from_db()
+        self.assertEqual(student.role, 'teacher')
+        self.assertTrue(hasattr(student, 'teacher_profile'))
+
+    def test_admin_cannot_delete_self(self):
+        url = reverse('manage_delete',
+                      kwargs={'model_name': 'user', 'pk': self.admin.pk})
+        r = self.client.post(url)
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
+    def test_admin_cannot_remove_own_admin_access(self):
+        url = reverse('manage_edit',
+                      kwargs={'model_name': 'user', 'pk': self.admin.pk})
+        r = self.client.post(url, {
+            'role': 'student', 'email': '', 'first_name': '',
+            'last_name': '', 'phone_number': '', 'is_active': 'on',
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'own admin access')
+        self.admin.refresh_from_db()
+        self.assertEqual(self.admin.role, 'admin')
+
+    def test_delete_user_modal(self):
+        victim = make_user('p_victim', 'student')
+        StudentProfile.objects.create(user=victim)
+        url = reverse('manage_delete', kwargs={'model_name': 'user', 'pk': victim.pk})
+        r = self.client.get(url + '?modal=1',
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertContains(r, 'student profile')
+        r = self.client.post(url + '?modal=1',
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertFalse(User.objects.filter(pk=victim.pk).exists())
+
+    def test_people_crud_requires_admin(self):
+        teacher = make_user('p_tch2', 'teacher')
+        self.client.force_login(teacher)
+        self.assertEqual(self.client.get(self._add_url()).status_code, 302)
+
+
+class ManageLinksTests(TestCase):
+    """Links & Practice tab: link add/delete through the modal CRUD."""
+
+    def setUp(self):
+        self.admin = make_user('l_adm', 'admin', is_staff=True, is_superuser=True)
+        self.client.force_login(self.admin)
+        self.teacher = make_user('l_tch', 'teacher')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher)
+        self.student = make_user('l_stu', 'student')
+        self.student_profile = StudentProfile.objects.create(user=self.student)
+        self.parent = make_user('l_par', 'parent')
+        self.parent_profile = ParentProfile.objects.create(user=self.parent)
+        course = Course.objects.create(title='L Course')
+        chapter = Chapter.objects.create(course=course, title='L Ch', order=1)
+        self.lesson = Lesson.objects.create(chapter=chapter, title='L Lesson', order=1)
+        self.exercise = Exercise.objects.create(
+            lesson=self.lesson, title='L Ex', order=1)
+
+    def test_add_teacher_student_link(self):
+        url = reverse('manage_add', kwargs={'model_name': 'teacherstudent'})
+        r = self.client.post(url + '?modal=1', {
+            'teacher': self.teacher_profile.pk,
+            'student': self.student_profile.pk,
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertTrue(TeacherStudent.objects.filter(
+            teacher=self.teacher_profile, student=self.student_profile).exists())
+
+    def test_duplicate_teacher_student_link_rejected(self):
+        TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+        url = reverse('manage_add', kwargs={'model_name': 'teacherstudent'})
+        r = self.client.post(url + '?modal=1', {
+            'teacher': self.teacher_profile.pk,
+            'student': self.student_profile.pk,
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'already exists')
+
+    def test_delete_teacher_student_link(self):
+        link = TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+        url = reverse('manage_delete',
+                      kwargs={'model_name': 'teacherstudent', 'pk': link.pk})
+        r = self.client.post(url + '?modal=1',
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertFalse(TeacherStudent.objects.filter(pk=link.pk).exists())
+
+    def test_add_and_delete_student_parent_link(self):
+        add = reverse('manage_add', kwargs={'model_name': 'studentparent'})
+        r = self.client.post(add, {
+            'student': self.student_profile.pk,
+            'parent': self.parent_profile.pk,
+            'relationship_type': 'Mother',
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        link = StudentParent.objects.get(student=self.student_profile)
+        self.assertEqual(link.relationship_type, 'Mother')
+        delete = reverse('manage_delete',
+                         kwargs={'model_name': 'studentparent', 'pk': link.pk})
+        self.client.post(delete)
+        self.assertFalse(StudentParent.objects.filter(pk=link.pk).exists())
+
+    def test_add_and_delete_student_lesson(self):
+        add = reverse('manage_add', kwargs={'model_name': 'studentlesson'})
+        r = self.client.post(add, {
+            'student': self.student_profile.pk, 'lesson': self.lesson.pk,
+        })
+        self.assertRedirects(r, reverse('manage_center'))
+        link = StudentLesson.objects.get(student=self.student_profile)
+        delete = reverse('manage_delete',
+                         kwargs={'model_name': 'studentlesson', 'pk': link.pk})
+        r = self.client.post(delete + '?modal=1',
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertFalse(StudentLesson.objects.filter(pk=link.pk).exists())
+
+    def test_attempt_cannot_be_added_but_can_be_deleted(self):
+        attempt = SpeakingAttempt.objects.create(
+            student=self.student_profile, exercise=self.exercise,
+            transcript='hello')
+        add = reverse('manage_add', kwargs={'model_name': 'speakingattempt'})
+        self.assertEqual(self.client.get(add).status_code, 404)
+        delete = reverse('manage_delete',
+                         kwargs={'model_name': 'speakingattempt', 'pk': attempt.pk})
+        r = self.client.post(delete)
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertFalse(SpeakingAttempt.objects.filter(pk=attempt.pk).exists())
+
+    def test_center_shows_links_and_attempts(self):
+        TeacherStudent.objects.create(
+            teacher=self.teacher_profile, student=self.student_profile)
+        SpeakingAttempt.objects.create(
+            student=self.student_profile, exercise=self.exercise,
+            transcript='hi')
+        r = self.client.get(reverse('manage_center'))
+        self.assertContains(r, 'l_tch')
+        self.assertContains(r, 'Recent Speaking Attempts')

@@ -51,7 +51,10 @@ class CustomUserChangeForm(BaseUserChangeForm):
 # ---------------------------------------------------------------------------
 # Content management forms (used by the admin-only Content Manager pages).
 # ---------------------------------------------------------------------------
-from .models import Course, Chapter, Lesson, Exercise, TeacherProfile  # noqa: E402
+from .models import (
+    Course, Chapter, Lesson, Exercise, TeacherProfile, StudentProfile,
+    ParentProfile, TeacherStudent, StudentParent, StudentLesson,
+)  # noqa: E402
 
 
 class _BootstrapModelForm(forms.ModelForm):
@@ -108,3 +111,108 @@ class ExerciseForm(_BootstrapModelForm):
             'instructions': forms.Textarea(attrs={'rows': 3}),
             'expected_text': forms.Textarea(attrs={'rows': 3}),
         }
+
+
+# ---------------------------------------------------------------------------
+# Management Center forms: People (users) and Links & Practice.
+# ---------------------------------------------------------------------------
+from django.contrib.auth.password_validation import validate_password  # noqa: E402
+
+PROFILE_MODELS = {
+    'teacher': TeacherProfile,
+    'student': StudentProfile,
+    'parent': ParentProfile,
+}
+
+
+def ensure_profile(user):
+    """Create the matching profile for the user's role when missing."""
+    model = PROFILE_MODELS.get(user.role)
+    if model is not None:
+        model.objects.get_or_create(user=user)
+
+
+class ManagedUserCreateForm(_BootstrapModelForm):
+    """Admin-only user creation inside the Management Center."""
+
+    password1 = forms.CharField(
+        label='Password', widget=forms.PasswordInput,
+        help_text='Minimum 8 characters.')
+    password2 = forms.CharField(
+        label='Confirm password', widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ['username', 'role', 'email', 'first_name', 'last_name',
+                  'phone_number', 'is_active']
+
+    def clean_password2(self):
+        p1 = self.cleaned_data.get('password1')
+        p2 = self.cleaned_data.get('password2')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("The two passwords don't match.")
+        validate_password(p2, self.instance)
+        return p2
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password1'])
+        if commit:
+            user.save()
+            ensure_profile(user)
+        return user
+
+
+class ManagedUserEditForm(_BootstrapModelForm):
+    """Admin-only user edit (password changes stay in Django admin)."""
+
+    class Meta:
+        model = User
+        fields = ['role', 'email', 'first_name', 'last_name',
+                  'phone_number', 'is_active']
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            ensure_profile(user)
+        return user
+
+
+class TeacherStudentForm(_BootstrapModelForm):
+    class Meta:
+        model = TeacherStudent
+        fields = ['teacher', 'student']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['teacher'].queryset = TeacherProfile.objects.select_related(
+            'user').order_by('user__username')
+        self.fields['student'].queryset = StudentProfile.objects.select_related(
+            'user').order_by('user__username')
+
+
+class StudentParentForm(_BootstrapModelForm):
+    class Meta:
+        model = StudentParent
+        fields = ['student', 'parent', 'relationship_type']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student'].queryset = StudentProfile.objects.select_related(
+            'user').order_by('user__username')
+        self.fields['parent'].queryset = ParentProfile.objects.select_related(
+            'user').order_by('user__username')
+
+
+class StudentLessonForm(_BootstrapModelForm):
+    class Meta:
+        model = StudentLesson
+        fields = ['student', 'lesson']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student'].queryset = StudentProfile.objects.select_related(
+            'user').order_by('user__username')
+        self.fields['lesson'].queryset = Lesson.objects.select_related(
+            'chapter__course').order_by('chapter__course__title',
+                                        'chapter__order', 'order')

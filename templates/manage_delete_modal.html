@@ -4,6 +4,9 @@
     <button type="button" class="esp-modal-x" data-esp-modal-close aria-label="Close">&#10005;</button>
 </div>
 <p>Are you sure you want to permanently delete the {{ label|lower }} <strong>"{{ obj }}"</strong>?</p>
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
 {% if cascade %}
     <div class="alert alert-warning">
         <strong>This will also delete:</strong>

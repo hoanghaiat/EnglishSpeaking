@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 from . import views_auth
 from . import views_manage
@@ -15,8 +16,11 @@ urlpatterns = [
     path('teacher/lesson/<int:lesson_id>/edit/', views.teacher_edit_lesson, name='teacher_edit_lesson'),
     path('teacher/lesson/<int:lesson_id>/delete/', views.teacher_delete_lesson, name='teacher_delete_lesson'),
 
-    # Admin content management: one hub for Course > Chapter > Lesson > Exercise
-    path('manage/content/', views_manage.content_hub, name='manage_content'),
+    # Management Center: one page, three tabs
+    # (Learning Content | People | Links & Practice).
+    path('manage/', views_manage.management_center, name='manage_center'),
+    path('manage/content/', RedirectView.as_view(pattern_name='manage_center'),
+         name='manage_content'),
     path('manage/<str:model_name>/add/', views_manage.manage_add, name='manage_add'),
     path('manage/<str:model_name>/<int:pk>/edit/', views_manage.manage_edit, name='manage_edit'),
     path('manage/<str:model_name>/<int:pk>/delete/', views_manage.manage_delete, name='manage_delete'),

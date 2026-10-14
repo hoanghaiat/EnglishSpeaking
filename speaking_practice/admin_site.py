@@ -93,7 +93,7 @@ class ESPAdminSite(AdminSite):
             models.insert(0, {
                 'object_name': 'ContentManager',
                 'name': 'Content Manager',
-                'admin_url': reverse('manage_content'),
+                'admin_url': reverse('manage_center'),
                 'add_url': None,
                 'view_only': False,
             })
