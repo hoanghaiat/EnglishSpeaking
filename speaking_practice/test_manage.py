@@ -163,6 +163,72 @@ class ManageContentAccessTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertNotContains(r, 'data-esp-modal-form')
 
+    def test_admin_logout_goes_straight_to_login(self):
+        self.client.force_login(self.admin)
+        r = self.client.post('/admin/logout/')
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, '/admin/login/')
+        # No intermediate "Logged out" page anymore.
+        r = self.client.get('/admin/logout/')
+        self.assertEqual(r.status_code, 302)
+
+    def test_admin_login_has_remember_me(self):
+        r = self.client.get('/admin/login/')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'name="remember_me"')
+
+    def test_admin_login_remember_me_controls_session_expiry(self):
+        # Unchecked -> session expires when the browser closes.
+        self.client.post('/admin/login/',
+                         {'username': 'm_adm', 'password': 'pw123456'})
+        self.assertEqual(self.client.session.get('_session_expiry'), 0)
+        self.client.logout()
+        # Checked -> persistent session.
+        self.client.post('/admin/login/',
+                         {'username': 'm_adm', 'password': 'pw123456',
+                          'remember_me': 'on'})
+        self.assertEqual(
+            self.client.session.get('_session_expiry'),
+            settings.SESSION_COOKIE_AGE)
+
+    def test_admin_unified_header(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/admin/speaking_practice/teacherstudent/')
+        self.assertContains(r, 'id="esp-topnav"')
+        self.assertContains(r, 'My Dashboard')
+        self.assertContains(r, 'Management')
+        self.assertContains(r, 'esp-user-chip')
+        # The old Django admin header is gone.
+        self.assertNotContains(r, 'id="user-tools"')
+
+    def test_site_header_management_dropdown(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/manage/content/')
+        self.assertContains(r, 'mgmtDropdown')
+        self.assertContains(r, 'Learning Content')
+        self.assertNotContains(r, '&#128218; Manage Content</a>')
+
+    def test_site_notifications_are_toasts(self):
+        self.client.get('/accounts/logout/')  # sets a "logged out" message
+        r = self.client.get('/accounts/login/')
+        self.assertContains(r, 'esp-toasts')
+        self.assertContains(r, 'esp-toast')
+
+    def test_home_has_no_action_buttons_for_members(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('home'))
+        self.assertNotContains(r, 'Continue Practicing')
+        self.assertNotContains(r, 'Browse Lessons')
+        self.assertContains(r, 'Speak English with Confidence')
+
+    def test_admin_dashboard_slimmed_down(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('dashboard'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Total Users')  # stats stay
+        self.assertContains(r, 'My Account')
+        self.assertNotContains(r, 'Open Content Manager')
+
 
 class ManageContentCrudTests(TestCase):
     def setUp(self):

@@ -11,21 +11,36 @@
     <script src="{% static 'js/admin-ux.js' %}"></script>
 {% endblock %}
 
-{% block usertools %}
-{% if has_permission %}
-<div id="user-tools" class="esp-usertools">
-    <span class="esp-user-chip">&#128100; <strong>{% firstof user.get_short_name user.get_username %}</strong></span>
-    {% if site_url %}
-        <a class="esp-utool" href="{{ site_url }}">&#127760; {% translate 'View site' %}</a>
+{# Unified header: the same navigation as the main site, so moving
+   between site pages and admin pages never changes the header. #}
+{% block header %}
+<div id="esp-topnav">
+    <span class="esp-topnav-brand">&#127908; English Speaking Practice</span>
+    {% if user.is_authenticated %}
+    <nav class="esp-topnav-links" aria-label="Primary">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'dashboard' %}">My Dashboard</a>
+        <a href="{% url 'lesson_list' %}">Speaking Lessons</a>
+        <div class="esp-topnav-drop">
+            <button type="button" class="esp-topnav-dropbtn" aria-haspopup="true">&#128218; Management &#9662;</button>
+            <div class="esp-topnav-menu">
+                <a href="{% url 'manage_content' %}">&#128218; Learning Content</a>
+                <a href="{% url 'admin:speaking_practice_user_changelist' %}">&#128101; People</a>
+                <a href="{% url 'admin:speaking_practice_teacherstudent_changelist' %}">&#128279; Links &amp; Practice</a>
+            </div>
+        </div>
+        <a href="{% url 'profile' %}">My Profile</a>
+    </nav>
     {% endif %}
-    {% if user.has_usable_password %}
-        <a class="esp-utool" href="{% url 'admin:password_change' %}">&#128273; {% translate 'Change password' %}</a>
-    {% endif %}
-    <form id="logout-form" method="post" action="{% url 'admin:logout' %}" class="esp-utool-form">
-        {% csrf_token %}
-        <button type="submit" class="esp-utool">&#9194; {% translate 'Log out' %}</button>
-    </form>
-    <span class="esp-theme-wrap">{% include "admin/color_theme_toggle.html" %}</span>
+    <div class="esp-topnav-right">
+        <span class="esp-theme-wrap">{% include "admin/color_theme_toggle.html" %}</span>
+        {% if user.is_authenticated %}
+        <span class="esp-user-chip">&#128100; <strong>{% firstof user.get_short_name user.get_username %}</strong></span>
+        <form id="logout-form" method="post" action="{% url 'admin:logout' %}" class="esp-utool-form">
+            {% csrf_token %}
+            <button type="submit" class="esp-utool">&#9194; {% translate 'Log out' %}</button>
+        </form>
+        {% endif %}
+    </div>
 </div>
-{% endif %}
 {% endblock %}

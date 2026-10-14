@@ -33,12 +33,27 @@
         .esp-footer { background: #1e1b4b; color: #c7d2fe; }
         .esp-footer a { color: #e0e7ff; text-decoration: none; }
         .esp-footer a:hover { text-decoration: underline; }
+        /* Floating toast notifications: never push the layout down. */
+        .esp-toasts {
+            position: fixed; top: 76px; right: 20px; z-index: 2100;
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: min(360px, calc(100vw - 40px));
+        }
+        .esp-toast {
+            margin: 0; border-radius: 12px; border: 0;
+            padding: 12px 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
+        }
+        .esp-toast.alert-success { background: #dcfce7; color: #166534; border-left: 4px solid #22c55e; }
+        .esp-toast.alert-info { background: #e0f2fe; color: #0c4a6e; border-left: 4px solid #06b6d4; }
+        .esp-toast.alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+        .esp-toast.alert-danger, .esp-toast.alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark esp-navbar sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand esp-brand" href="{% url 'home' %}">&#127908; English Speaking Practice</a>
+            <span class="navbar-brand esp-brand">&#127908; English Speaking Practice</span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -55,8 +70,13 @@
                             <a class="nav-link" href="{% url 'lesson_list' %}">Speaking Lessons</a>
                         </li>
                         {% if user.role == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'manage_content' %}">&#128218; Manage Content</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="mgmtDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">&#128218; Management</a>
+                            <ul class="dropdown-menu" aria-labelledby="mgmtDropdown">
+                                <li><a class="dropdown-item" href="{% url 'manage_content' %}">&#128218; Learning Content</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin:speaking_practice_user_changelist' %}">&#128101; People</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin:speaking_practice_teacherstudent_changelist' %}">&#128279; Links &amp; Practice</a></li>
+                            </ul>
                         </li>
                         {% endif %}
                     {% endif %}
@@ -83,18 +103,20 @@
     </nav>
 
     <main class="container my-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
         {% block content %}
         {% endblock %}
     </main>
+
+    {% if messages %}
+    <div class="esp-toasts" aria-live="polite">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show esp-toast" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <footer class="esp-footer mt-5 py-4">
         <div class="container text-center">

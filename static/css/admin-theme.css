@@ -38,21 +38,8 @@
     --object-tools-hover-bg: #4338ca;
 }
 
-/* ---------- Header ---------- */
-#header {
-    background: var(--esp-gradient);
-    color: #fff;
-    padding: 14px 40px;
-}
-#header a:link, #header a:visited { color: #fff; }
-#branding h1, #branding h1 a {
-    color: #fff !important;
-    font-weight: 800;
-    letter-spacing: .3px;
-}
-#user-tools { font-size: 12px; }
-#user-tools a { border-bottom: 1px solid rgba(255,255,255,.4); }
-#user-tools a:hover { border-bottom-color: #fff; color: #fff; }
+/* (The old Django #header was replaced by the unified #esp-topnav above;
+   no legacy header rules remain.) */
 
 /* ---------- Breadcrumbs ---------- */
 div.breadcrumbs {
@@ -132,9 +119,16 @@ div.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
 #nav-sidebar .current-model a { color: #3730a3 !important; font-weight: 700; }
 
 /* ---------- Login page ---------- */
-.login #header { padding: 16px; justify-content: center; }
 .login .form-row input { border-radius: 10px; }
 .login .submit-row input { width: 100%; }
+.login .esp-remember-row label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13.5px; cursor: pointer;
+}
+.login .esp-remember-row input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: #2563eb;
+}
+.login .esp-remember-row .help { margin: 4px 0 0; font-size: 12px; }
 
 /* ---------- Inline groups ---------- */
 .inline-group {
@@ -145,6 +139,77 @@ div.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
 .inline-group h2 {
     background: var(--esp-gradient);
     color: #fff;
+}
+
+/* ---------- Unified top navigation (same on site and admin pages) ---------- */
+#esp-topnav {
+    background: linear-gradient(90deg, #4338ca, #2563eb);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 40px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .18);
+}
+.esp-topnav-brand {
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: .2px;
+    color: #fff;
+    white-space: nowrap;
+}
+.esp-topnav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.esp-topnav-links > a, .esp-topnav-dropbtn {
+    color: rgba(255, 255, 255, .85);
+    text-decoration: none;
+    font-size: 13.5px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.esp-topnav-links > a:hover, .esp-topnav-dropbtn:hover,
+.esp-topnav-links > a:focus-visible, .esp-topnav-dropbtn:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, .14);
+}
+.esp-topnav-drop { position: relative; }
+.esp-topnav-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 220px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .22);
+    padding: 6px;
+    z-index: 1500;
+}
+.esp-topnav-drop:hover .esp-topnav-menu,
+.esp-topnav-drop:focus-within .esp-topnav-menu { display: block; }
+.esp-topnav-menu a {
+    display: block;
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 13.5px;
+    padding: 9px 12px;
+    border-radius: 8px;
+}
+.esp-topnav-menu a:hover { background: #eef2ff; color: #3730a3; }
+.esp-topnav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* ---------- Redesigned user tools (header) ---------- */

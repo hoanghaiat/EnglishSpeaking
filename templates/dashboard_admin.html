@@ -44,41 +44,23 @@
         </div>
 
         <div class="row mt-4 g-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card esp-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">&#128218; Learning Content</h5>
-                        <p class="card-text text-muted">Manage courses, chapters, lessons and speaking exercises on one page.</p>
-                        <a href="{% url 'manage_content' %}" class="btn btn-primary">Open Content Manager</a>
+                        <h5 class="card-title">&#128100; My Account</h5>
+                        <p class="mb-1"><strong>{{ request.user.username }}</strong> &mdash; {{ request.user.get_role_display }}</p>
+                        <p class="text-muted small mb-0">
+                            {% if request.user.email %}{{ request.user.email }} &middot; {% endif %}Joined {{ request.user.date_joined|date:"M d, Y" }}
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card esp-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">&#128101; People</h5>
-                        <p class="card-text text-muted">Manage accounts and profiles in Django admin.</p>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{% url 'admin:speaking_practice_user_changelist' %}" class="btn btn-outline-primary btn-sm">Users</a>
-                            <a href="{% url 'admin:speaking_practice_teacherprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Teachers</a>
-                            <a href="{% url 'admin:speaking_practice_studentprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Students</a>
-                            <a href="{% url 'admin:speaking_practice_parentprofile_changelist' %}" class="btn btn-outline-primary btn-sm">Parents</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card esp-card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">&#128279; Links &amp; Practice</h5>
-                        <p class="card-text text-muted">Who teaches whom, assigned lessons and submitted practice.</p>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{% url 'admin:speaking_practice_teacherstudent_changelist' %}" class="btn btn-outline-primary btn-sm">Teacher&ndash;Students</a>
-                            <a href="{% url 'admin:speaking_practice_studentparent_changelist' %}" class="btn btn-outline-primary btn-sm">Student&ndash;Parents</a>
-                            <a href="{% url 'admin:speaking_practice_studentlesson_changelist' %}" class="btn btn-outline-primary btn-sm">Assigned Lessons</a>
-                            <a href="{% url 'admin:speaking_practice_speakingattempt_changelist' %}" class="btn btn-outline-primary btn-sm">Speaking Attempts</a>
-                            <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary btn-sm">Django Admin</a>
-                        </div>
+                        <h5 class="card-title">&#128202; Student Practice Status</h5>
+                        <p class="card-text text-muted">Review recent speaking attempts and keep an eye on learner activity.</p>
+                        <a href="{% url 'admin:speaking_practice_speakingattempt_changelist' %}" class="btn btn-primary btn-sm">Review Speaking Attempts</a>
                     </div>
                 </div>
             </div>

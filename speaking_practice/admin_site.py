@@ -8,7 +8,10 @@ in the admin navigation with a single "Content Manager" link, and groups
 the remaining models by job (content / people / links & practice) so the
 menu reflects how the admin actually works.
 """
+from django.conf import settings
 from django.contrib.admin import AdminSite
+from django.contrib.auth import logout as auth_logout
+from django.shortcuts import redirect
 from django.urls import reverse
 
 from .models import (
@@ -33,6 +36,25 @@ class ESPAdminSite(AdminSite):
     site_header = 'English Speaking Practice'
     site_title = 'ESP Admin'
     index_title = 'Site administration'
+
+    def login(self, request, extra_context=None):
+        """Honor the opt-in 'Remember me' checkbox.
+
+        Without it the session expires when the browser closes, so the
+        account is never kept logged in without explicit permission.
+        """
+        response = super().login(request, extra_context)
+        if request.method == 'POST' and request.user.is_authenticated:
+            if request.POST.get('remember_me'):
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+            else:
+                request.session.set_expiry(0)
+        return response
+
+    def logout(self, request, extra_context=None):
+        """Skip the intermediate 'Logged out' page — go straight to login."""
+        auth_logout(request)
+        return redirect(reverse('admin:login'))
 
     def app_index(self, request, app_label, extra_context=None):
         """Add lively overview data (stats + recent activity) to the app page."""
