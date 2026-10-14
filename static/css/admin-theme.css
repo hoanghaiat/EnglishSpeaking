@@ -146,3 +146,77 @@ div.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
     background: var(--esp-gradient);
     color: #fff;
 }
+
+/* ---------- Redesigned user tools (header) ---------- */
+.esp-usertools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12.5px;
+}
+.esp-user-chip {
+    background: rgba(255, 255, 255, .2);
+    border: 1px solid rgba(255, 255, 255, .4);
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+.esp-user-chip strong { color: #fff; }
+.esp-utool {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .28);
+    color: #fff !important;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s ease;
+}
+a.esp-utool:hover, button.esp-utool:hover {
+    background: rgba(255, 255, 255, .3);
+    color: #fff !important;
+}
+.esp-utool-form { display: inline; margin: 0; padding: 0; }
+.esp-theme-wrap { display: inline-flex; align-items: center; }
+.esp-theme-wrap .theme-toggle {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 999px;
+    padding: 6px 12px;
+    color: #fff;
+}
+.esp-theme-wrap .theme-toggle:hover {
+    background: rgba(255, 255, 255, .3);
+}
+.esp-theme-wrap .theme-toggle svg { vertical-align: -3px; }
+
+/* ---------- Smooth page transitions (no more jarring flash) ---------- */
+@keyframes espFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: none; }
+}
+#content { animation: espFadeIn .22s ease-out; }
+
+/* Slim top loading bar */
+#esp-loadbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    z-index: 3000;
+    background: linear-gradient(90deg, #06b6d4, #818cf8, #c084fc);
+    border-radius: 0 3px 3px 0;
+    pointer-events: none;
+}
+#esp-loadbar.on { width: 92%; transition: width 2.2s ease; }

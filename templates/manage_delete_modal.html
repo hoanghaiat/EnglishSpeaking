@@ -1,0 +1,23 @@
+{# Modal fragment: delete confirmation body (no page chrome). Loaded via esp-modal.js. #}
+<div class="esp-modal-head">
+    <h3>&#128465; Delete {{ label }}</h3>
+    <button type="button" class="esp-modal-x" data-esp-modal-close aria-label="Close">&#10005;</button>
+</div>
+<p>Are you sure you want to permanently delete the {{ label|lower }} <strong>"{{ obj }}"</strong>?</p>
+{% if cascade %}
+    <div class="alert alert-warning">
+        <strong>This will also delete:</strong>
+        <ul class="mb-0">
+            {% for item in cascade %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+{% else %}
+    <p class="text-muted">Nothing else depends on it.</p>
+{% endif %}
+<form method="post" data-esp-modal-form>
+    {% csrf_token %}
+    <div class="esp-modal-foot">
+        <button type="submit" class="esp-btn esp-btn-danger">&#128465; Yes, Delete It</button>
+        <button type="button" class="esp-btn esp-btn-ghost" data-esp-modal-close>Keep It</button>
+    </div>
+</form>

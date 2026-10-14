@@ -27,26 +27,7 @@
 
                 <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
-                    {% for field in form %}
-                        {% if field.field.widget.input_type == 'checkbox' %}
-                            <div class="form-check mb-3">
-                                {{ field }}
-                                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="mb-3">
-                                <label class="form-label" for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong>{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-                                {{ field }}
-                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                                {% if field.name == 'reference_audio' and field.value %}
-                                    <div class="form-text">Current file: {{ field.value }}</div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                    {% include '_form_fields.html' %}
 
                     <button type="submit" class="btn btn-primary">&#10003; {% if mode == 'add' %}Create {{ label }}{% else %}Save Changes{% endif %}</button>
                     <a href="{% url 'manage_content' %}" class="btn btn-outline-secondary">Cancel</a>

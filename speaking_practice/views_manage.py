@@ -8,7 +8,7 @@ role check (see views.teacher_create_lesson).
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ChapterForm, CourseForm, ExerciseForm, LessonForm
@@ -32,6 +32,12 @@ MANAGE_MODELS = {
         'parent_field': 'lesson', 'parent_model': Lesson, 'parent_label': 'Lesson',
     },
 }
+
+
+def _is_modal(request):
+    """True when the client wants a modal fragment instead of a full page."""
+    return (request.GET.get('modal') == '1'
+            or request.headers.get('x-requested-with') == 'XMLHttpRequest')
 
 
 def _admin_or_redirect(request):
@@ -145,6 +151,8 @@ def manage_add(request, model_name):
         if form.is_valid():
             obj = form.save()
             messages.success(request, f"{cfg['label']} '{obj}' created.")
+            if _is_modal(request):
+                return JsonResponse({'ok': True})
             return redirect('manage_content')
     else:
         initial = {}
@@ -153,7 +161,8 @@ def manage_add(request, model_name):
             initial['order'] = _next_order(cfg['model'], cfg['parent_field'], parent)
         form = cfg['form'](initial=initial)
 
-    return render(request, 'manage_form.html', {
+    template = 'manage_form_modal.html' if _is_modal(request) else 'manage_form.html'
+    return render(request, template, {
         'form': form,
         'mode': 'add',
         'label': cfg['label'],
@@ -175,11 +184,14 @@ def manage_edit(request, model_name, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f"{cfg['label']} '{obj}' updated.")
+            if _is_modal(request):
+                return JsonResponse({'ok': True})
             return redirect('manage_content')
     else:
         form = cfg['form'](instance=obj)
 
-    return render(request, 'manage_form.html', {
+    template = 'manage_form_modal.html' if _is_modal(request) else 'manage_form.html'
+    return render(request, template, {
         'form': form,
         'mode': 'edit',
         'label': cfg['label'],
@@ -201,9 +213,13 @@ def manage_delete(request, model_name, pk):
         name = str(obj)
         obj.delete()
         messages.success(request, f"{cfg['label']} '{name}' deleted.")
+        if _is_modal(request):
+            return JsonResponse({'ok': True})
         return redirect('manage_content')
 
-    return render(request, 'manage_confirm_delete.html', {
+    template = ('manage_delete_modal.html'
+                if _is_modal(request) else 'manage_confirm_delete.html')
+    return render(request, template, {
         'obj': obj,
         'label': cfg['label'],
         'cascade': cascade,

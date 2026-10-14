@@ -8,7 +8,7 @@
         <h2>&#128218; Learning Content</h2>
         <p class="text-muted mb-0">Manage all courses, chapters, lessons and exercises on one page.</p>
     </div>
-    <a href="{% url 'manage_add' model_name='course' %}" class="btn btn-primary">&#10133; New Course</a>
+    <a data-esp-modal href="{% url 'manage_add' model_name='course' %}" class="btn btn-primary">&#10133; New Course</a>
 </div>
 
 <div class="alert alert-info mt-3">
@@ -36,9 +36,9 @@
                 </div>
             </div>
             <div class="btn-group btn-group-sm" role="group" aria-label="Course actions">
-                <a href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}" class="btn btn-outline-primary">&#10133; Chapter</a>
-                <a href="{% url 'manage_edit' model_name='course' pk=course.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                <a href="{% url 'manage_delete' model_name='course' pk=course.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                <a data-esp-modal href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}" class="btn btn-outline-primary">&#10133; Chapter</a>
+                <a data-esp-modal href="{% url 'manage_edit' model_name='course' pk=course.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                <a data-esp-modal href="{% url 'manage_delete' model_name='course' pk=course.pk %}" class="btn btn-outline-danger">&#128465;</a>
             </div>
         </div>
 
@@ -56,9 +56,9 @@
                             {% if not chapter.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
                         </div>
                         <div class="btn-group btn-group-sm" role="group" aria-label="Chapter actions">
-                            <a href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}" class="btn btn-outline-primary">&#10133; Lesson</a>
-                            <a href="{% url 'manage_edit' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                            <a href="{% url 'manage_delete' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                            <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}" class="btn btn-outline-primary">&#10133; Lesson</a>
+                            <a data-esp-modal href="{% url 'manage_edit' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                            <a data-esp-modal href="{% url 'manage_delete' model_name='chapter' pk=chapter.pk %}" class="btn btn-outline-danger">&#128465;</a>
                         </div>
                     </div>
 
@@ -73,9 +73,9 @@
                                     {% if not lesson.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
                                 </div>
                                 <div class="btn-group btn-group-sm" role="group" aria-label="Lesson actions">
-                                    <a href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}" class="btn btn-outline-primary">&#10133; Exercise</a>
-                                    <a href="{% url 'manage_edit' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                                    <a href="{% url 'manage_delete' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                                    <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}" class="btn btn-outline-primary">&#10133; Exercise</a>
+                                    <a data-esp-modal href="{% url 'manage_edit' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                    <a data-esp-modal href="{% url 'manage_delete' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-danger">&#128465;</a>
                                 </div>
                             </div>
 
@@ -90,27 +90,29 @@
                                     {% if not exercise.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
                                 </div>
                                 <div class="btn-group btn-group-sm" role="group" aria-label="Exercise actions">
-                                    <a href="{% url 'manage_edit' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                                    <a href="{% url 'manage_delete' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                                    <a data-esp-modal href="{% url 'manage_edit' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                    <a data-esp-modal href="{% url 'manage_delete' model_name='exercise' pk=exercise.pk %}" class="btn btn-outline-danger">&#128465;</a>
                                 </div>
                             </div>
                             {% empty %}
-                            <p class="text-muted small ms-2 mt-2 mb-0">No exercises yet — <a href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}">add the first one</a>.</p>
+                            <p class="text-muted small ms-2 mt-2 mb-0">No exercises yet — <a data-esp-modal href="{% url 'manage_add' model_name='exercise' %}?lesson={{ lesson.pk }}">add the first one</a>.</p>
                             {% endfor %}
                         </div>
                         {% endwith %}
                     {% empty %}
-                    <p class="text-muted small mt-2 mb-0">No lessons yet — <a href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}">add the first one</a>.</p>
+                    <p class="text-muted small mt-2 mb-0">No lessons yet — <a data-esp-modal href="{% url 'manage_add' model_name='lesson' %}?chapter={{ chapter.pk }}">add the first one</a>.</p>
                     {% endfor %}
                 </div>
                 {% endwith %}
             {% empty %}
-            <p class="text-muted mb-0">No chapters yet — <a href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}">add the first chapter</a>.</p>
+            <p class="text-muted mb-0">No chapters yet — <a data-esp-modal href="{% url 'manage_add' model_name='chapter' %}?course={{ course.pk }}">add the first chapter</a>.</p>
             {% endfor %}
         </div>
     </div>
     {% endwith %}
 {% empty %}
-    <div class="alert alert-info">No courses yet. <a href="{% url 'manage_add' model_name='course' %}">Create your first course</a> to start building lessons.</div>
+    <div class="alert alert-info">No courses yet. <a data-esp-modal href="{% url 'manage_add' model_name='course' %}">Create your first course</a> to start building lessons.</div>
 {% endfor %}
+
+{% include '_esp_modal.html' %}
 {% endblock %}

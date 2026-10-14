@@ -1,4 +1,5 @@
 """Tests for the admin-only Learning Content Manager (manage/content/)."""
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
@@ -99,6 +100,68 @@ class ManageContentAccessTests(TestCase):
             r = self.client.get(url)
             self.assertEqual(r.status_code, 200)
             self.assertContains(r, 'css/admin-theme.css')
+
+    def test_admin_header_redesigned(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/admin/speaking_practice/')
+        self.assertContains(r, 'esp-user-chip')
+        self.assertContains(r, 'esp-utool')
+        self.assertContains(r, 'logout-form')
+
+    def test_admin_popup_centering_js_present(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/admin/')
+        self.assertContains(r, 'js/admin-ux.js')
+        js_path = settings.BASE_DIR / 'static' / 'js' / 'admin-ux.js'
+        self.assertIn('/* ESP: center admin popups */', js_path.read_text())
+
+    def test_manage_add_modal_returns_fragment(self):
+        self.client.force_login(self.admin)
+        r = self.client.get('/manage/lesson/add/?modal=1',
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'data-esp-modal-form')
+        self.assertNotContains(r, 'id="esp-modal"')
+
+    def test_manage_add_modal_post_valid_returns_json(self):
+        self.client.force_login(self.admin)
+        r = self.client.post(
+            '/manage/lesson/add/?modal=1',
+            {'title': 'Modal Test Lesson', 'chapter': self.chapter.pk,
+             'order': 50, 'is_active': 'on'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r['Content-Type'], 'application/json')
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertTrue(Lesson.objects.filter(title='Modal Test Lesson').exists())
+
+    def test_manage_add_modal_post_invalid_returns_html(self):
+        self.client.force_login(self.admin)
+        r = self.client.post(
+            '/manage/lesson/add/?modal=1',
+            {'title': '', 'chapter': self.chapter.pk},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertNotEqual(r['Content-Type'], 'application/json')
+        self.assertContains(r, 'data-esp-modal-form')
+
+    def test_manage_delete_modal_post_returns_json(self):
+        self.client.force_login(self.admin)
+        lesson = Lesson.objects.create(
+            title='Delete Me', chapter=self.chapter, order=51)
+        r = self.client.post(
+            f'/manage/lesson/{lesson.pk}/delete/?modal=1',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), {'ok': True})
+        self.assertFalse(Lesson.objects.filter(pk=lesson.pk).exists())
+
+    def test_manage_add_full_page_still_works(self):
+        # Without the modal flag the classic full-page flow is unchanged.
+        self.client.force_login(self.admin)
+        r = self.client.get('/manage/lesson/add/')
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, 'data-esp-modal-form')
 
 
 class ManageContentCrudTests(TestCase):

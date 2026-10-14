@@ -56,8 +56,8 @@
 <h2 class="esp-section-title">&#9889; Quick actions</h2>
 <div class="esp-actions">
   <a class="button" href="{% url 'manage_content' %}">&#128218; Open Content Manager</a>
-  <a class="button" href="{% url 'manage_add' model_name='lesson' %}">&#10133; New Lesson</a>
-  <a class="button" href="{% url 'manage_add' model_name='exercise' %}">&#10133; New Exercise</a>
+  <a class="button" href="{% url 'manage_add' model_name='lesson' %}" data-esp-modal>&#10133; New Lesson</a>
+  <a class="button" href="{% url 'manage_add' model_name='exercise' %}" data-esp-modal>&#10133; New Exercise</a>
   <a class="button" href="{% url 'admin:speaking_practice_speakingattempt_changelist' %}">&#127911; Review Attempts</a>
 </div>
 
@@ -77,4 +77,6 @@
     <p class="empty">No practice attempts yet &mdash; they&rsquo;ll show up here as students start speaking! &#127908;</p>
   {% endif %}
 </div>
+
+{% include '_esp_modal.html' %}
 {% endblock %}
