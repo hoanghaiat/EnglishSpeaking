@@ -155,7 +155,41 @@ def lesson_detail(request, lesson_id):
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html')
+    user = request.user
+    role_profile = None
+    for relation in ('teacher_profile', 'student_profile', 'parent_profile'):
+        role_profile = _profile_or_none(user, relation)
+        if role_profile is not None:
+            break
+
+    capabilities = {
+        'admin': [
+            'Management Center: manage courses, chapters, lessons, exercises',
+            'Management Center: manage users, roles and accounts',
+            'Management Center: manage teacher\u2013student, student\u2013parent links and lesson assignments',
+            'Django admin: full access to all data',
+        ],
+        'teacher': [
+            'Create, edit and delete own lessons',
+            'View assigned students',
+        ],
+        'student': [
+            'Browse lessons and practice speaking exercises',
+            'Submit speaking attempts and track own progress',
+        ],
+        'parent': [
+            "View linked children's practice activity",
+        ],
+    }.get(user.role, [])
+    if user.is_staff:
+        capabilities = capabilities + ['Can sign in to Django admin (/admin/)']
+    if user.is_superuser:
+        capabilities = capabilities + ['Superuser: unrestricted system access']
+
+    return render(request, 'profile.html', {
+        'role_profile': role_profile,
+        'capabilities': capabilities,
+    })
 
 
 @login_required

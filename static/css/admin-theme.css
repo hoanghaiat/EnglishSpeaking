@@ -163,47 +163,19 @@ div.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
     white-space: nowrap;
 }
 .esp-topnav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-.esp-topnav-links > a, .esp-topnav-dropbtn {
+.esp-topnav-links > a {
     color: rgba(255, 255, 255, .85);
     text-decoration: none;
     font-size: 13.5px;
     padding: 8px 12px;
     border-radius: 8px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
     white-space: nowrap;
 }
-.esp-topnav-links > a:hover, .esp-topnav-dropbtn:hover,
-.esp-topnav-links > a:focus-visible, .esp-topnav-dropbtn:focus-visible {
+.esp-topnav-links > a:hover,
+.esp-topnav-links > a:focus-visible {
     color: #fff;
     background: rgba(255, 255, 255, .14);
 }
-.esp-topnav-drop { position: relative; }
-.esp-topnav-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-width: 220px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, .22);
-    padding: 6px;
-    z-index: 1500;
-}
-.esp-topnav-drop:hover .esp-topnav-menu,
-.esp-topnav-drop:focus-within .esp-topnav-menu { display: block; }
-.esp-topnav-menu a {
-    display: block;
-    color: #0f172a;
-    text-decoration: none;
-    font-size: 13.5px;
-    padding: 9px 12px;
-    border-radius: 8px;
-}
-.esp-topnav-menu a:hover { background: #eef2ff; color: #3730a3; }
 .esp-topnav-right {
     margin-left: auto;
     display: flex;

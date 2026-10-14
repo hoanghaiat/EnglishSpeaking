@@ -33,15 +33,16 @@
         .esp-footer { background: #1e1b4b; color: #c7d2fe; }
         .esp-footer a { color: #e0e7ff; text-decoration: none; }
         .esp-footer a:hover { text-decoration: underline; }
-        /* Floating toast notifications: never push the layout down. */
+        /* Floating toast notifications: centered at the top, never push the layout. */
         .esp-toasts {
-            position: fixed; top: 76px; right: 20px; z-index: 2100;
-            display: flex; flex-direction: column; gap: 10px;
-            max-width: min(360px, calc(100vw - 40px));
+            position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+            z-index: 2100;
+            display: flex; flex-direction: column; gap: 10px; align-items: center;
+            width: min(560px, calc(100vw - 40px));
         }
         .esp-toast {
             margin: 0; border-radius: 12px; border: 0;
-            padding: 12px 16px;
+            padding: 12px 16px; width: 100%; text-align: center;
             box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
         }
         .esp-toast.alert-success { background: #dcfce7; color: #166534; border-left: 4px solid #22c55e; }
@@ -70,13 +71,8 @@
                             <a class="nav-link" href="{% url 'lesson_list' %}">Speaking Lessons</a>
                         </li>
                         {% if user.role == 'admin' %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="mgmtDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">&#128218; Management</a>
-                            <ul class="dropdown-menu" aria-labelledby="mgmtDropdown">
-                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#learning">&#128218; Learning Content</a></li>
-                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#people">&#128101; People</a></li>
-                                <li><a class="dropdown-item" href="{% url 'manage_center' %}#links">&#128279; Links &amp; Practice</a></li>
-                            </ul>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_center' %}">&#128218; Management</a>
                         </li>
                         {% endif %}
                     {% endif %}

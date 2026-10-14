@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
@@ -18,6 +19,12 @@ def login_view(request):
             # Ensure the user is active before logging in
             if user.is_active:
                 login(request, user)
+                # Opt-in persistence: unchecked (default) -> the session
+                # expires when the browser closes.
+                if request.POST.get('remember_me'):
+                    request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                else:
+                    request.session.set_expiry(0)
                 messages.success(request, 'Login successful!')
                 return redirect('dashboard')
             else:

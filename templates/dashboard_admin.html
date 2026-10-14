@@ -44,7 +44,7 @@
         </div>
 
         <div class="row mt-4 g-3">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="card esp-card h-100">
                     <div class="card-body">
                         <h5 class="card-title">&#128100; My Account</h5>
@@ -52,15 +52,6 @@
                         <p class="text-muted small mb-0">
                             {% if request.user.email %}{{ request.user.email }} &middot; {% endif %}Joined {{ request.user.date_joined|date:"M d, Y" }}
                         </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card esp-card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">&#128202; Student Practice Status</h5>
-                        <p class="card-text text-muted">Review recent speaking attempts and keep an eye on learner activity.</p>
-                        <a href="{% url 'admin:speaking_practice_speakingattempt_changelist' %}" class="btn btn-primary btn-sm">Review Speaking Attempts</a>
                     </div>
                 </div>
             </div>

@@ -79,35 +79,25 @@ class ManageContentAccessTests(TestCase):
         for text in ['MC Course', 'MC Chapter', 'MC Lesson', 'MC Exercise']:
             self.assertContains(r, text)
 
-    def test_admin_app_index_links_to_hub(self):
+    def test_admin_app_index_redirects_to_management_center(self):
         self.client.force_login(self.admin)
         r = self.client.get('/admin/speaking_practice/')
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, self.hub_url)
-
-    def test_admin_app_index_shows_overview(self):
-        self.client.force_login(self.admin)
-        r = self.client.get('/admin/speaking_practice/')
-        self.assertEqual(r.status_code, 200)
-        self.assertIn('esp_stats', r.context)
-        self.assertEqual(r.context['esp_stats']['courses'], 1)
-        self.assertEqual(r.context['esp_stats']['lessons'], 1)
-        # lively overview, not the duplicated group cards
-        self.assertContains(r, 'Quick actions')
-        self.assertContains(r, 'Latest speaking attempts')
-        self.assertNotContains(r, 'Links &amp; practice')
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, reverse('manage_center'))
 
     def test_admin_pages_load_brand_theme(self):
         self.client.force_login(self.admin)
-        for url in ('/admin/', '/admin/speaking_practice/',
-                    '/admin/speaking_practice/teacherstudent/'):
+        for url in ('/admin/', '/admin/speaking_practice/teacherstudent/'):
             r = self.client.get(url)
             self.assertEqual(r.status_code, 200)
             self.assertContains(r, 'css/admin-theme.css')
+        # The retired app overview redirects to the Management Center.
+        r = self.client.get('/admin/speaking_practice/')
+        self.assertEqual(r.status_code, 302)
 
     def test_admin_header_redesigned(self):
         self.client.force_login(self.admin)
-        r = self.client.get('/admin/speaking_practice/')
+        r = self.client.get('/admin/speaking_practice/teacherstudent/')
         self.assertContains(r, 'esp-user-chip')
         self.assertContains(r, 'esp-utool')
         self.assertContains(r, 'logout-form')
@@ -226,11 +216,11 @@ class ManageContentAccessTests(TestCase):
         # The old Django admin header is gone.
         self.assertNotContains(r, 'id="user-tools"')
 
-    def test_site_header_management_dropdown(self):
+    def test_site_header_management_link(self):
         self.client.force_login(self.admin)
         r = self.client.get(reverse('manage_center'))
-        self.assertContains(r, 'mgmtDropdown')
-        self.assertContains(r, 'Learning Content')
+        self.assertContains(r, '&#128218; Management</a>')
+        self.assertNotContains(r, 'mgmtDropdown')
         self.assertNotContains(r, '&#128218; Manage Content</a>')
 
     def test_site_notifications_are_toasts(self):
@@ -253,6 +243,7 @@ class ManageContentAccessTests(TestCase):
         self.assertContains(r, 'Total Users')  # stats stay
         self.assertContains(r, 'My Account')
         self.assertNotContains(r, 'Open Content Manager')
+        self.assertNotContains(r, 'Student Practice Status')
 
 
 class ManageContentCrudTests(TestCase):

@@ -8,22 +8,74 @@
         <h2>&#128100; My Profile</h2>
 
         <div class="card esp-card mt-3">
+            <div class="card-header bg-white"><h5 class="mb-0">Account</h5></div>
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 1.75rem;" aria-hidden="true">&#128100;</div>
                     <div>
                         <h4 class="mb-0">{{ user.username }}</h4>
-                        <span class="badge bg-primary text-capitalize">{{ user.role }}</span>
+                        <span class="badge bg-primary text-capitalize">{{ user.get_role_display }}</span>
+                        {% if user.is_active %}<span class="badge bg-success">Active</span>
+                        {% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}
                     </div>
                 </div>
-                <hr>
-                <p class="mb-2"><strong>Email:</strong> {{ user.email|default:"&mdash;" }}</p>
-                {% if user.phone_number %}
-                    <p class="mb-2"><strong>Phone:</strong> {{ user.phone_number }}</p>
-                {% endif %}
-                <p class="mb-0 text-muted">Keep practicing &mdash; every day counts! &#127908;</p>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Full name</dt>
+                    <dd class="col-sm-8">{{ user.get_full_name|default:"&mdash;" }}</dd>
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ user.email|default:"&mdash;" }}</dd>
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">{{ user.phone_number|default:"&mdash;" }}</dd>
+                    <dt class="col-sm-4">Role</dt>
+                    <dd class="col-sm-8 text-capitalize">{{ user.get_role_display }}</dd>
+                    <dt class="col-sm-4">Staff / Superuser</dt>
+                    <dd class="col-sm-8">{% if user.is_staff %}Yes{% else %}No{% endif %} / {% if user.is_superuser %}Yes{% else %}No{% endif %}</dd>
+                    <dt class="col-sm-4">Joined</dt>
+                    <dd class="col-sm-8">{{ user.date_joined|date:"M d, Y H:i" }}</dd>
+                    <dt class="col-sm-4">Last login</dt>
+                    <dd class="col-sm-8">{{ user.last_login|date:"M d, Y H:i"|default:"&mdash;" }}</dd>
+                </dl>
             </div>
         </div>
+
+        {% if role_profile %}
+        <div class="card esp-card mt-3">
+            <div class="card-header bg-white"><h5 class="mb-0 text-capitalize">{{ user.role }} profile</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if user.role == 'teacher' %}
+                        <dt class="col-sm-4">Bio</dt>
+                        <dd class="col-sm-8">{{ role_profile.bio|default:"&mdash;" }}</dd>
+                        <dt class="col-sm-4">Qualifications</dt>
+                        <dd class="col-sm-8">{{ role_profile.qualifications|default:"&mdash;" }}</dd>
+                    {% elif user.role == 'student' %}
+                        <dt class="col-sm-4">Date of birth</dt>
+                        <dd class="col-sm-8">{{ role_profile.date_of_birth|date:"M d, Y"|default:"&mdash;" }}</dd>
+                        <dt class="col-sm-4">Grade level</dt>
+                        <dd class="col-sm-8">{{ role_profile.grade_level|default:"&mdash;" }}</dd>
+                    {% elif user.role == 'parent' %}
+                        <dt class="col-sm-4">Relationship to child</dt>
+                        <dd class="col-sm-8">{{ role_profile.relationship_to_child|default:"&mdash;" }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card esp-card mt-3">
+            <div class="card-header bg-white"><h5 class="mb-0">&#128273; Granted permissions</h5></div>
+            <div class="card-body">
+                {% if capabilities %}
+                <ul class="mb-0">
+                    {% for cap in capabilities %}<li>{{ cap }}</li>{% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No special permissions.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <p class="mt-3 mb-0 text-muted">Keep practicing &mdash; every day counts! &#127908;</p>
     </div>
 </div>
 {% endblock %}

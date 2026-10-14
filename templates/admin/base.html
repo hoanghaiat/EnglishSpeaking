@@ -21,14 +21,7 @@
         <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'dashboard' %}">My Dashboard</a>
         <a href="{% url 'lesson_list' %}">Speaking Lessons</a>
-        <div class="esp-topnav-drop">
-            <button type="button" class="esp-topnav-dropbtn" aria-haspopup="true">&#128218; Management &#9662;</button>
-            <div class="esp-topnav-menu">
-                <a href="{% url 'manage_center' %}#learning">&#128218; Learning Content</a>
-                <a href="{% url 'manage_center' %}#people">&#128101; People</a>
-                <a href="{% url 'manage_center' %}#links">&#128279; Links &amp; Practice</a>
-            </div>
-        </div>
+        <a href="{% url 'manage_center' %}">&#128218; Management</a>
         <a href="{% url 'profile' %}">My Profile</a>
     </nav>
     {% endif %}

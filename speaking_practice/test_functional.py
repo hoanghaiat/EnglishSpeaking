@@ -468,3 +468,65 @@ class DashboardEdgeTest(WorldTestCase):
         r = self.client.get(reverse('lesson_list'))
         self.assertEqual(r.status_code, 200)
         self.assertNotContains(r, 'W Lesson 1')
+
+
+class SiteLoginRememberMeTests(WorldTestCase):
+    """Site login page: remember-me checkbox + session expiry semantics."""
+
+    def test_login_page_has_remember_me(self):
+        r = self.client.get(self.urls['login'])
+        self.assertContains(r, 'name="remember_me"')
+        self.assertContains(r, 'autocomplete="new-password"')
+
+    def test_login_without_remember_me_expires_on_browser_close(self):
+        self.client.post(self.urls['login'],
+                         {'username': 'w_student1', 'password': PW})
+        self.assertEqual(self.client.session.get('_session_expiry'), 0)
+
+    def test_login_with_remember_me_is_persistent(self):
+        from django.conf import settings
+        self.client.post(self.urls['login'],
+                         {'username': 'w_student1', 'password': PW,
+                          'remember_me': 'on'})
+        self.assertEqual(self.client.session.get('_session_expiry'),
+                         settings.SESSION_COOKIE_AGE)
+
+
+class ProfilePageTests(WorldTestCase):
+    """Profile page shows full account info and granted permissions."""
+
+    def test_admin_profile_shows_everything(self):
+        self.login('w_admin')
+        r = self.client.get(reverse('profile'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Granted permissions')
+        self.assertContains(r, 'Management Center')
+        self.assertContains(r, 'Staff / Superuser')
+        self.assertContains(r, 'Last login')
+
+    def test_teacher_profile_shows_bio_and_capabilities(self):
+        self.login('w_teacher1')
+        r = self.client.get(reverse('profile'))
+        self.assertContains(r, 'teacher profile')
+        self.assertContains(r, 'Create, edit and delete own lessons')
+
+    def test_student_profile_shows_grade_and_capabilities(self):
+        self.login('w_student1')
+        r = self.client.get(reverse('profile'))
+        self.assertContains(r, 'student profile')
+        self.assertContains(r, 'Submit speaking attempts')
+
+    def test_parent_profile_shows_relationship(self):
+        self.login('w_parent1')
+        r = self.client.get(reverse('profile'))
+        self.assertContains(r, 'parent profile')
+        self.assertContains(r, "children")
+
+
+class ToastPositionTests(WorldTestCase):
+    """Notifications float centered at the top of the viewport."""
+
+    def test_toasts_are_centered(self):
+        self.login('w_student1')
+        r = self.client.get(reverse('dashboard'))
+        self.assertContains(r, 'left: 50%; transform: translateX(-50%)')

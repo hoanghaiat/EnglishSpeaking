@@ -14,15 +14,6 @@ from django.contrib.auth import logout as auth_logout
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from .models import (
-    Chapter,
-    Course,
-    Exercise,
-    Lesson,
-    SpeakingAttempt,
-    StudentProfile,
-)
-
 CONTENT_MODEL_NAMES = {'course', 'chapter', 'lesson', 'exercise'}
 
 NAV_GROUPS = [
@@ -57,22 +48,10 @@ class ESPAdminSite(AdminSite):
         return redirect(reverse('admin:login'))
 
     def app_index(self, request, app_label, extra_context=None):
-        """Add lively overview data (stats + recent activity) to the app page."""
-        extra_context = extra_context or {}
+        """The old app overview is retired: the Management Center
+        (/manage/) now covers it, so redirect there."""
         if app_label == 'speaking_practice':
-            extra_context['esp_stats'] = {
-                'courses': Course.objects.count(),
-                'chapters': Chapter.objects.count(),
-                'lessons': Lesson.objects.count(),
-                'exercises': Exercise.objects.count(),
-                'students': StudentProfile.objects.count(),
-                'attempts': SpeakingAttempt.objects.count(),
-            }
-            extra_context['esp_recent_attempts'] = (
-                SpeakingAttempt.objects
-                .select_related('student__user', 'exercise')
-                .order_by('-created_at')[:5]
-            )
+            return redirect('manage_center')
         return super().app_index(request, app_label, extra_context)
 
     def get_app_list(self, request, app_label=None):
