@@ -526,9 +526,9 @@ class ProfilePageTests(WorldTestCase):
 
 
 class ToastPositionTests(WorldTestCase):
-    """Notifications float centered at the top of the viewport."""
+    """Notifications float at the top-center of the viewport, below the navbar."""
 
-    def test_toasts_are_centered(self):
+    def test_toasts_are_top_centered(self):
         self.login('w_student1')
         r = self.client.get(reverse('dashboard'))
-        self.assertContains(r, 'top: 50%; left: 50%; transform: translate(-50%, -50%)')
+        self.assertContains(r, 'top: 76px; left: 50%; transform: translateX(-50%)')

@@ -49,6 +49,11 @@
     /* Sub-tabs inside Links & Practice. */
     .links-subpane[hidden] { display: none; }
     #linksSubTabs .nav-link { border-radius: 999px; }
+    /* Student-count dropdown toggle on class cards. */
+    .esp-student-toggle { text-decoration: none; font-size: inherit; }
+    .esp-student-toggle:hover { text-decoration: underline; }
+    .esp-student-toggle .esp-caret { display: inline-block; transition: transform .15s ease; font-size: .8em; }
+    .esp-student-toggle[aria-expanded="true"] .esp-caret { transform: rotate(180deg); }
 </style>
 
 <div class="mb-3">
@@ -168,14 +173,15 @@
                             <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
                                     <h6 class="mb-0">{{ class.name }}</h6>
-                                    <small class="text-muted">{{ class.students.count }} student(s){% if is_admin %} &middot; {{ class.teacher.user.username }}{% endif %}</small>
+                                    <small class="text-muted">{% if is_admin %}{{ class.teacher.user.username }} &middot; {% endif %}<button type="button" class="btn btn-link btn-sm p-0 align-baseline esp-student-toggle" data-bs-toggle="collapse" data-bs-target="#class-students-{{ class.pk }}" aria-expanded="false" aria-controls="class-students-{{ class.pk }}">{{ class.students.count }} student{{ class.students.count|pluralize }} <span class="esp-caret">&#9662;</span></button></small>
                                 </div>
                                 <div class="btn-group btn-group-sm" role="group" aria-label="Class actions">
                                     <a data-esp-modal href="{% url 'class_edit' pk=class.pk %}" class="btn btn-outline-secondary">&#9999;</a>
                                     <a data-esp-modal href="{% url 'class_delete' pk=class.pk %}" class="btn btn-outline-danger">&#128465;</a>
                                 </div>
                             </div>
-                            <div class="card-body">
+                            <div class="collapse" id="class-students-{{ class.pk }}">
+                                <div class="card-body">
                                 {% for student in class.students.all %}
                                     <span class="esp-student-chip">{{ student.user.username }}
                                         <form method="post" action="{% url 'class_remove_student' pk=class.pk student_pk=student.pk %}" class="d-inline">
@@ -187,6 +193,7 @@
                                 {% empty %}
                                     <span class="text-muted small">No students yet — edit the class to add some.</span>
                                 {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1193,3 +1193,61 @@ class ManageLinksUiTests(TestCase):
         content = r.content.decode()
         self.assertIn('Minimum 6 characters', content)
         self.assertNotIn('Minimum 8 characters', content)
+
+    def test_class_card_student_count_is_collapsible(self):
+        # The student count is a dropdown toggle; chips live in a matching
+        # collapse container (keeps cards compact with many students).
+        from .models import StudyClass
+        sc = StudyClass.objects.create(name='DD Class',
+                                       teacher=self.teacher_profile)
+        sc.students.add(self.student_profile)
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=links')
+        self.assertEqual(r.status_code, 200)
+        content = r.content.decode()
+        self.assertIn('esp-student-toggle', content)
+        self.assertIn(f'data-bs-target="#class-students-{sc.pk}"', content)
+        self.assertIn(f'id="class-students-{sc.pk}"', content)
+        self.assertIn('1 student', content)
+
+
+class SeedDemoDataTests(TestCase):
+    """The seed_demo_data command builds a realistic demo dataset."""
+
+    def test_seed_demo_data(self):
+        from django.core.management import call_command
+        from .models import (ParentProfile, StudentParent, StudentProfile,
+                             StudyClass, TeacherProfile, TeacherStudent, User)
+        call_command('seed_demo_data')
+        self.assertEqual(
+            User.objects.filter(username__startswith='demo_teacher').count(), 10)
+        self.assertEqual(
+            User.objects.filter(username__startswith='demo_student').count(), 40)
+        self.assertEqual(
+            User.objects.filter(username__startswith='demo_parent').count(), 40)
+        self.assertEqual(TeacherProfile.objects.filter(
+            user__username__startswith='demo_teacher').count(), 10)
+        self.assertEqual(StudentProfile.objects.filter(
+            user__username__startswith='demo_student').count(), 40)
+        self.assertEqual(ParentProfile.objects.filter(
+            user__username__startswith='demo_parent').count(), 40)
+        # Every demo student has a teacher and exactly one parent.
+        for sp in StudentProfile.objects.filter(
+                user__username__startswith='demo_student'):
+            self.assertTrue(
+                TeacherStudent.objects.filter(student=sp).exists())
+            self.assertEqual(StudentParent.objects.filter(student=sp).count(), 1)
+        # One sample class per teacher.
+        self.assertEqual(StudyClass.objects.filter(
+            teacher__user__username__startswith='demo_teacher').count(), 10)
+        # Passwords work.
+        u = User.objects.get(username='demo_teacher1')
+        self.assertTrue(u.check_password('Test12345!'))
+
+    def test_seed_demo_data_idempotent(self):
+        from django.core.management import call_command
+        from .models import User
+        call_command('seed_demo_data')
+        call_command('seed_demo_data')
+        self.assertEqual(
+            User.objects.filter(username__startswith='demo_').count(), 90)

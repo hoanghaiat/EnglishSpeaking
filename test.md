@@ -10,7 +10,31 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Form audit: rà soát toàn bộ 18 modal của /manage/ (2026-10-14)
+## <next> — Toast top-center, student dropdown, seed demo data (2026-10-14)
+
+Theo feedback của Hoàng trên screenshot:
+1. **Toast**: chuyển từ giữa màn hình về top-center dưới navbar (`top: 76px`);
+   fix CSS custom đè mất `padding-right` của Bootstrap khiến nút × đè lên chữ
+   (giờ `padding: 12px 44px 12px 16px`). Vẫn tự tắt sau 3s, có thể đóng tay.
+2. **Class card**: số học sinh thành dropdown — nút "N students ▾" toggle
+   collapse hiện chips học sinh (giữ nút × xóa nhanh). Mặc định thu gọn cho
+   gọn card khi lớp đông.
+3. **Seed data**: lệnh mới `python manage.py seed_demo_data` — tạo 10 giáo viên
+   (`demo_teacher1..10`), 40 học sinh (`demo_student01..40`), 40 phụ huynh
+   (`demo_parent01..40`), mật khẩu chung `Test12345!`; mỗi HS có 1 GV (round-robin)
+   và đúng 1 PH; 10 lớp mẫu (mỗi GV 1 lớp, 4 HS). Idempotent (chạy lại không trùng).
+
+- Verify bằng headless Chromium: toast ở top-center, × không đè chữ; dropdown
+  mở/đóng mượt, caret xoay; 10 class hiện đúng.
+- 3 tests mới: `test_class_card_student_count_is_collapsible`,
+  `test_seed_demo_data`, `test_seed_demo_data_idempotent`.
+- `manage.py check`: no issues.
+- Full suite: **186/186 passed** (Django 5.2.17).
+- `test_manage` + toast: **112/112 passed** (Django 4.x).
+- Lưu ý: test `ToastPositionTests` cũ assert CSS toast giữa màn hình — đã cập nhật
+  theo vị trí top-center mới.
+
+## f2930ab — Form audit: fix stale password help text and duplicate teacher error (2026-10-14)
 
 Rà soát bằng headless Chromium (admin + teacher): mở từng modal add/edit/delete
 của course/chapter/lesson/exercise/user/class/teacher-student/student-parent/
