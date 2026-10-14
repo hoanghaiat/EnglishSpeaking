@@ -1,0 +1,30 @@
+{# Read-only lesson preview for the esp modal (no form, no navigation). #}
+<div class="esp-modal-head">
+    <h3>&#128065; {{ lesson.title }}</h3>
+    <button type="button" class="esp-modal-x" data-esp-modal-close aria-label="Close">&#10005;</button>
+</div>
+<p class="text-muted small">
+    {{ lesson.chapter.course.title }} &rsaquo; {{ lesson.chapter.title }}
+    {% if lesson.teacher %}&middot; by {{ lesson.teacher.user.username }}{% endif %}
+    &middot; {% if lesson.is_active %}Active{% else %}Hidden{% endif %}
+</p>
+{% if lesson.description %}
+<p>{{ lesson.description }}</p>
+{% endif %}
+<h6 class="mt-3">Speaking exercises ({{ exercises|length }})</h6>
+{% if exercises %}
+<ol class="ps-3">
+    {% for ex in exercises %}
+    <li class="mb-2">
+        <strong>{{ ex.title }}</strong>
+        {% if ex.expected_text %}<br><small class="text-muted">&#128483; Say: "{{ ex.expected_text|truncatewords:20 }}"</small>{% endif %}
+        {% if not ex.is_active %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}
+    </li>
+    {% endfor %}
+</ol>
+{% else %}
+<p class="text-muted">No exercises in this lesson yet.</p>
+{% endif %}
+<div class="esp-modal-foot">
+    <button type="button" class="esp-btn esp-btn-ghost" data-esp-modal-close>Close</button>
+</div>

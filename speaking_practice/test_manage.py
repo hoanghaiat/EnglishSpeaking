@@ -51,11 +51,13 @@ class ManageContentAccessTests(TestCase):
         self.assertIn('/accounts/login/', r.url)
 
     def test_teacher_allowed_scoped(self):
-        # Teachers get scoped access: their own classes/links, no content tab.
+        # Teachers get scoped access: classes inside Links & Practice,
+        # no Learning Content tab.
         self.client.force_login(self.teacher)
         r = self.client.get(self.hub_url)
         self.assertEqual(r.status_code, 200)
-        self.assertContains(r, 'My Classes')
+        self.assertContains(r, 'Links &amp; Practice')
+        self.assertContains(r, 'classes-card')
         self.assertNotContains(r, 'id="pane-learning"')
 
     def test_teacher_cannot_touch_content_models(self):
@@ -856,3 +858,203 @@ class MiscBehaviorTests(TestCase):
         self.assertIn('_auth_user_id', self.client.session)
         self.client.get(reverse('logout'))
         self.assertNotIn('_auth_user_id', self.client.session)
+
+
+class ManageRound4Tests(TestCase):
+    """Review round 4: classes in Links tab, preview modal, changelog
+    tabs/table, people counts, profile password change, relaxed validators."""
+
+    def setUp(self):
+        self.admin = make_user('r4_adm', 'admin', is_staff=True, is_superuser=True)
+        self.teacher = make_user('r4_tch', 'teacher')
+        self.tp = TeacherProfile.objects.create(user=self.teacher)
+        self.student = make_user('r4_stu', 'student')
+        self.sp = StudentProfile.objects.create(user=self.student)
+        TeacherStudent.objects.create(teacher=self.tp, student=self.sp)
+        self.study_class = StudyClass.objects.create(name='7/13', teacher=self.tp)
+        self.study_class.students.add(self.sp)
+        course = Course.objects.create(title='R4 Course')
+        chapter = Chapter.objects.create(course=course, title='R4 Ch', order=1)
+        self.lesson = Lesson.objects.create(
+            chapter=chapter, title='R4 Lesson', order=1, teacher=self.tp)
+        self.exercise = Exercise.objects.create(
+            lesson=self.lesson, title='R4 Exercise', order=1)
+
+    def test_classes_live_in_links_tab(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=links')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'classes-card')
+        self.assertContains(r, '7/13')
+        self.assertNotContains(r, 'id="tab-classes"')
+        self.assertNotContains(r, 'id="pane-classes"')
+
+    def test_remove_student_from_class(self):
+        self.client.force_login(self.teacher)
+        url = reverse('class_remove_student',
+                      kwargs={'pk': self.study_class.pk,
+                              'student_pk': self.sp.pk})
+        r = self.client.post(url, {'next': '/manage/?tab=links'})
+        self.assertRedirects(r, '/manage/?tab=links')
+        self.assertFalse(
+            self.study_class.students.filter(pk=self.sp.pk).exists())
+        # The student account itself is kept.
+        self.assertTrue(
+            StudentProfile.objects.filter(pk=self.sp.pk).exists())
+
+    def test_remove_student_logged(self):
+        from .models import ChangeLog
+        self.client.force_login(self.teacher)
+        url = reverse('class_remove_student',
+                      kwargs={'pk': self.study_class.pk,
+                              'student_pk': self.sp.pk})
+        self.client.post(url)
+        entry = ChangeLog.objects.latest('created_at')
+        self.assertIn("removed student 'r4_stu' from class '7/13'",
+                      entry.summary)
+
+    def test_teacher_cannot_remove_from_other_teachers_class(self):
+        other = make_user('r4_tch2', 'teacher')
+        other_tp = TeacherProfile.objects.create(user=other)
+        other_class = StudyClass.objects.create(name='X', teacher=other_tp)
+        other_class.students.add(self.sp)
+        self.client.force_login(self.teacher)
+        url = reverse('class_remove_student',
+                      kwargs={'pk': other_class.pk, 'student_pk': self.sp.pk})
+        r = self.client.post(url)
+        self.assertRedirects(r, reverse('manage_center'))
+        self.assertTrue(other_class.students.filter(pk=self.sp.pk).exists())
+
+    def test_lesson_preview_modal_stays_on_page(self):
+        self.client.force_login(self.admin)
+        url = reverse('lesson_preview', kwargs={'pk': self.lesson.pk})
+        r = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'R4 Lesson')
+        self.assertContains(r, 'R4 Exercise')
+        # No <form> and no redirect: pure preview fragment.
+        self.assertNotContains(r, '<form')
+
+    def test_lesson_preview_forbidden_for_teacher(self):
+        self.client.force_login(self.teacher)
+        url = reverse('lesson_preview', kwargs={'pk': self.lesson.pk})
+        r = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 302)
+
+    def test_changelog_category_filter(self):
+        from .changelog import log_change
+        log_change(self.admin, 'class', 'create', 'class entry')
+        log_change(self.admin, 'user', 'create', 'user entry')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('changelog_list') + '?category=class')
+        self.assertContains(r, 'class entry')
+        self.assertNotContains(r, 'user entry')
+        r = self.client.get(reverse('changelog_list'))
+        self.assertContains(r, 'class entry')
+        self.assertContains(r, 'user entry')
+
+    def test_changelog_renders_table(self):
+        from .changelog import log_change
+        log_change(self.admin, 'class', 'create', 'table entry')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('changelog_list'))
+        self.assertContains(r, '<table')
+        # Template comments must never leak into the HTML.
+        self.assertNotContains(r, '{#')
+
+    def test_people_counts_label(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=people')
+        content = r.content.decode()
+        # In-pane label shows total + per-role counts...
+        self.assertIn('3 users', content)
+        self.assertIn('1 Admin', content)
+        # ...and the People tab itself no longer carries a count badge.
+        tab_html = content.split('id="tab-people"')[1].split('</button>')[0]
+        self.assertNotIn('badge', tab_html)
+
+    def test_class_modal_checkbox_list_renders(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('class_add'),
+                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'esp-checklist')
+        self.assertContains(r, 'esp-check-item')
+
+    def test_class_edit_preselects_teacher(self):
+        from .forms import StudyClassForm
+        form = StudyClassForm(instance=self.study_class, is_admin=True)
+        self.assertEqual(form.fields['teacher'].initial, self.tp.pk)
+
+    def test_is_active_label_is_active(self):
+        from .forms import CourseForm
+        self.assertEqual(CourseForm().fields['is_active'].label, 'Active')
+
+    def test_order_help_text(self):
+        from .forms import ChapterForm, LessonForm, ExerciseForm
+        for form_cls in (ChapterForm, LessonForm, ExerciseForm):
+            self.assertIn('order', form_cls().fields['order'].help_text.lower())
+
+    def test_profile_password_change(self):
+        self.client.force_login(self.student)
+        r = self.client.post(reverse('profile'), {
+            'change_password': '1',
+            'old_password': 'pw123456',
+            'new_password1': 'brandnew1',
+            'new_password2': 'brandnew1',
+        })
+        self.assertRedirects(r, reverse('profile'))
+        # Still logged in after the change.
+        self.assertIn('_auth_user_id', self.client.session)
+        self.client.logout()
+        self.assertTrue(
+            self.client.login(username='r4_stu', password='brandnew1'))
+
+    def test_profile_password_change_wrong_old(self):
+        self.client.force_login(self.student)
+        r = self.client.post(reverse('profile'), {
+            'change_password': '1',
+            'old_password': 'wrongpw',
+            'new_password1': 'brandnew1',
+            'new_password2': 'brandnew1',
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Change password')
+
+    def test_relaxed_password_validators(self):
+        # Previously-common passwords are now accepted (min length 6).
+        r = self.client.post(reverse('signup'), {
+            'username': 'r4_newuser', 'email': 'r4@n.com',
+            'password1': 'qwerty123',
+            'password2': 'qwerty123', 'role': 'student',
+        })
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(User.objects.filter(username='r4_newuser').exists())
+
+    def test_short_password_still_rejected(self):
+        r = self.client.post(reverse('signup'), {
+            'username': 'r4_newuser2', 'email': 'r42@n.com',
+            'password1': 'abc',
+            'password2': 'abc', 'role': 'student',
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(User.objects.filter(username='r4_newuser2').exists())
+
+    def test_dashboard_total_classes(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('dashboard'))
+        self.assertContains(r, 'Total Classes')
+
+    def test_info_popover_present(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=learning')
+        self.assertContains(r, 'data-esp-info')
+        self.assertContains(r, 'How it works:')
+
+    def test_no_empty_course_nag(self):
+        Course.objects.all().delete()
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=learning')
+        self.assertNotContains(r, 'No courses yet')
+        # The template comment must not leak into the HTML.
+        self.assertNotContains(r, 'Include once per page')

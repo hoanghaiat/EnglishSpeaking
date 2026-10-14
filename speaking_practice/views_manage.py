@@ -366,6 +366,10 @@ def management_center(request):
             | Q(first_name__icontains=q_people)
             | Q(last_name__icontains=q_people))
     context['users'] = users
+    counts = {'total': users.count()}
+    for value, label in User.ROLE_CHOICES:
+        counts[value] = users.filter(role=value).count()
+    context['role_counts'] = counts
 
     # ---- Links & Practice ----
     if is_admin:
@@ -839,8 +843,67 @@ def assign_lessons(request):
 @login_required
 def changelog_list(request):
     from .changelog import changelog_for
+    from .models import ChangeLog
     if request.user.role not in ('admin', 'teacher'):
         messages.error(request, 'You do not have permission to view this page.')
         return redirect('dashboard')
-    entries = changelog_for(request.user)[:200]
-    return render(request, 'changelog_list.html', {'entries': entries})
+    category = request.GET.get('category', '').strip()
+    entries = changelog_for(request.user)
+    valid = {key for key, _label in ChangeLog.CATEGORY_CHOICES}
+    if category in valid:
+        entries = entries.filter(category=category)
+    else:
+        category = ''
+    return render(request, 'changelog_list.html', {
+        'entries': entries[:200],
+        'category': category,
+        'categories': ChangeLog.CATEGORY_CHOICES,
+    })
+
+
+@login_required
+def class_remove_student(request, pk, student_pk):
+    """Quick-remove one student from a class ("move out")."""
+    denied = _manager_or_redirect(request)
+    if denied:
+        return denied
+    obj = get_object_or_404(StudyClass, pk=pk)
+    allowed, _tp, _is_admin = _class_permission(request, obj)
+    if not allowed:
+        messages.error(request, 'You do not have permission for this action.')
+        return redirect('manage_center')
+    student = get_object_or_404(StudentProfile, pk=student_pk)
+    if request.method == 'POST' and obj.students.filter(pk=student.pk).exists():
+        obj.students.remove(student)
+        log_change(request.user, 'class', 'update',
+                   f"{request.user.username} removed student "
+                   f"'{student.user.username}' from class '{obj.name}'.",
+                   related_teacher=obj.teacher,
+                   related_student=student)
+        messages.success(
+            request,
+            f"Removed '{student.user.username}' from class '{obj.name}'.")
+    redirect_to = request.POST.get('next') or request.GET.get('next')
+    if redirect_to and redirect_to.startswith('/manage/'):
+        return redirect(redirect_to)
+    return redirect('manage_center')
+
+
+@login_required
+def lesson_preview(request, pk):
+    """Read-only lesson preview shown in a modal (stays on the page)."""
+    denied = _manager_or_redirect(request)
+    if denied:
+        return denied
+    if not _is_admin(request):
+        messages.error(request, 'You do not have permission for this action.')
+        return redirect('manage_center')
+    lesson = get_object_or_404(
+        Lesson.objects.select_related('teacher__user', 'chapter__course'),
+        pk=pk)
+    exercises = lesson.exercises.order_by('order')
+    if _is_modal(request):
+        return render(request, 'manage_lesson_preview.html', {
+            'lesson': lesson, 'exercises': exercises,
+        })
+    return redirect('manage_center')

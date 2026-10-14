@@ -11,6 +11,17 @@
     <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
 </div>
 
+<ul class="nav nav-pills mb-3 flex-wrap gap-1">
+    <li class="nav-item">
+        <a class="nav-link {% if not category %}active{% endif %}" href="{% url 'changelog_list' %}">All</a>
+    </li>
+    {% for value, label in categories %}
+    <li class="nav-item">
+        <a class="nav-link {% if category == value %}active{% endif %}" href="{% url 'changelog_list' %}?category={{ value }}">{{ label }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
 <div class="card esp-card">
     <div class="card-body">
         {% include '_changelog_entries.html' with entries=entries %}

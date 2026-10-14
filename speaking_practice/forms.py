@@ -64,15 +64,24 @@ class _BootstrapModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
+        for name, field in self.fields.items():
             widget = field.widget
             css = widget.attrs.get('class', '')
             if isinstance(widget, forms.CheckboxInput):
+                widget.attrs['class'] = (css + ' form-check-input').strip()
+            elif isinstance(widget, forms.CheckboxSelectMultiple):
+                # Marker for the checklist branch in _form_fields.html.
+                # Sub-inputs inherit attrs (option_inherits_attrs).
+                widget.is_esp_checklist = True
+                widget.attrs['class'] = (css + ' form-check-input').strip()
+            elif isinstance(widget, forms.RadioSelect):
                 widget.attrs['class'] = (css + ' form-check-input').strip()
             elif isinstance(widget, (forms.Select, forms.SelectMultiple)):
                 widget.attrs['class'] = (css + ' form-select').strip()
             else:
                 widget.attrs['class'] = (css + ' form-control').strip()
+            if name == 'is_active':
+                field.label = 'Active'
 
 
 class CourseForm(_BootstrapModelForm):
@@ -87,6 +96,9 @@ class ChapterForm(_BootstrapModelForm):
         model = Chapter
         fields = ['course', 'title', 'description', 'order', 'is_active']
         widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+        help_texts = {
+            'order': 'Display order inside the course: 1, 2, 3\u2026 appear top to bottom.',
+        }
 
 
 class LessonForm(_BootstrapModelForm):
@@ -94,6 +106,9 @@ class LessonForm(_BootstrapModelForm):
         model = Lesson
         fields = ['chapter', 'title', 'description', 'teacher', 'order', 'is_active']
         widgets = {'description': forms.Textarea(attrs={'rows': 3})}
+        help_texts = {
+            'order': 'Display order inside the chapter: 1, 2, 3\u2026 appear top to bottom.',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -108,6 +123,9 @@ class ExerciseForm(_BootstrapModelForm):
             'lesson', 'title', 'description', 'instructions', 'expected_text',
             'reference_audio', 'image', 'order', 'is_active',
         ]
+        help_texts = {
+            'order': 'Display order inside the lesson: 1, 2, 3\u2026 appear top to bottom.',
+        }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 2}),
             'instructions': forms.Textarea(attrs={'rows': 3}),
@@ -272,6 +290,9 @@ class StudyClassForm(_BootstrapModelForm):
         else:
             self.fields['students'].queryset = _own_students(teacher_profile)
         self.fields['students'].required = False
+        if is_admin and self.instance and self.instance.pk:
+            # Show the previously chosen teacher instead of a blank dropdown.
+            self.fields['teacher'].initial = self.instance.teacher_id
 
     def _get_validation_exclusions(self):
         # 'teacher' is set by the view (teachers), not by a form field, so

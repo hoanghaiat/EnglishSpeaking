@@ -1,15 +1,29 @@
-{# Shared changelog entries. Expects 'entries'. Timestamps render in Asia/Ho_Chi_Minh. #}
-{% for entry in entries %}
-<div class="d-flex gap-2 align-items-start mb-2">
-    <div class="flex-shrink-0" style="min-width: 150px;">
-        <span class="badge bg-secondary">{{ entry.get_category_display }}</span>
-        <span class="badge {% if entry.action == 'create' or entry.action == 'link' %}bg-success{% elif entry.action == 'delete' or entry.action == 'unlink' %}bg-danger{% elif entry.action == 'update' %}bg-primary{% else %}bg-info text-dark{% endif %}">{{ entry.get_action_display }}</span>
-    </div>
-    <div class="flex-grow-1">
-        <div>{{ entry.summary }}</div>
-        <small class="text-muted">{{ entry.created_at|date:"d/m/Y H:i" }} &middot; by {{ entry.actor.username|default:"system" }}</small>
-    </div>
+{# Shared changelog entries as a table. Expects 'entries'. Timestamps render in Asia/Ho_Chi_Minh (UTC+7). #}
+{% if entries %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th style="white-space: nowrap;">Time</th>
+                <th>Category</th>
+                <th>Action</th>
+                <th>Change</th>
+                <th>By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="text-muted small" style="white-space: nowrap;">{{ entry.created_at|date:"d/m/Y H:i" }}</td>
+                <td><span class="badge bg-secondary">{{ entry.get_category_display }}</span></td>
+                <td><span class="badge {% if entry.action == 'create' or entry.action == 'link' %}bg-success{% elif entry.action == 'delete' or entry.action == 'unlink' %}bg-danger{% elif entry.action == 'update' %}bg-primary{% else %}bg-info text-dark{% endif %}">{{ entry.get_action_display }}</span></td>
+                <td>{{ entry.summary }}</td>
+                <td class="text-muted small">{{ entry.actor.username|default:"system" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-{% empty %}
+{% else %}
 <p class="text-muted mb-0">No changes yet.</p>
-{% endfor %}
+{% endif %}

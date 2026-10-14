@@ -8,7 +8,7 @@
     <p class="text-muted">Welcome back, {{ user.username }}! Create speaking lessons and guide your students' practice.</p>
 
     <div class="row g-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card esp-card text-white bg-primary mb-3">
                 <div class="card-body">
                     <h5 class="card-title">&#128101; My Students</h5>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card esp-card text-white bg-success mb-3">
                 <div class="card-body">
                     <h5 class="card-title">&#127908; Speaking Lessons</h5>
@@ -28,7 +28,17 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card esp-card text-white bg-secondary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">&#127979; My Classes</h5>
+                    <p class="card-text esp-stat mb-0">{{ class_count }}</p>
+                    <small><a href="{% url 'manage_center' %}?tab=links" class="text-white text-decoration-underline">Manage classes</a></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
             <div class="card esp-card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">&#10133; Quick Action</h5>

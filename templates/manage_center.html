@@ -26,12 +26,32 @@
     }
     .esp-twisty[aria-expanded="true"] .esp-twisty-icon { transform: rotate(90deg); }
     .esp-twisty-body[hidden] { display: none; }
+    /* Info popover ("How it works"). */
+    .esp-info-btn {
+        border: none; background: #eef2ff; color: #3730a3;
+        border-radius: 50%; width: 22px; height: 22px; line-height: 1;
+        font-size: 13px; cursor: pointer; padding: 0;
+    }
+    .esp-info-btn:hover { background: #e0e7ff; }
+    .esp-info-pop[hidden] { display: none; }
+    /* Student chips with a remove button inside class cards. */
+    .esp-student-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 999px;
+        padding: 3px 6px 3px 12px; margin: 0 6px 6px 0; font-size: 13px;
+    }
+    .esp-chip-x {
+        border: none; background: #fee2e2; color: #b91c1c;
+        border-radius: 50%; width: 20px; height: 20px; line-height: 1;
+        font-size: 12px; cursor: pointer; padding: 0;
+    }
+    .esp-chip-x:hover { background: #fecaca; }
 </style>
 
 <div class="mb-3">
     <h2>&#128736; Management Center</h2>
     <p class="text-muted mb-0">
-        {% if is_admin %}Learning content, people, practice links, classes and lessons &mdash; everything on one page.
+        {% if is_admin %}Learning content, people, links, classes and lessons &mdash; everything on one page.
         {% else %}Your classes, student links and lesson assignments &mdash; everything on one page.{% endif %}
     </p>
 </div>
@@ -43,13 +63,10 @@
     </li>
     {% endif %}
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-people" data-bs-toggle="tab" data-bs-target="#pane-people" type="button" role="tab">&#128101; {% if is_admin %}People{% else %}My Students{% endif %} <span class="badge bg-secondary">{{ users|length }}</span></button>
-    </li>
-    <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-links" data-bs-toggle="tab" data-bs-target="#pane-links" type="button" role="tab">&#128279; Links &amp; Practice</button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-classes" data-bs-toggle="tab" data-bs-target="#pane-classes" type="button" role="tab">&#127979; {% if is_admin %}Classes{% else %}My Classes{% endif %} <span class="badge bg-secondary">{{ study_classes|length }}</span></button>
+        <button class="nav-link" id="tab-people" data-bs-toggle="tab" data-bs-target="#pane-people" type="button" role="tab">&#128101; {% if is_admin %}People{% else %}My Students{% endif %}</button>
     </li>
     {% if is_admin %}
     <li class="nav-item" role="presentation">
@@ -63,7 +80,9 @@
     {% if is_admin %}
     <div class="tab-pane fade" id="pane-learning" role="tabpanel" aria-labelledby="tab-learning">
         <div class="mgmt-pane-head">
-            <p class="text-muted">Courses, chapters, lessons and exercises. Click &#9654; to expand each level.</p>
+            <p class="text-muted">Courses, chapters, lessons and exercises. Click &#9654; to expand each level.
+                <button type="button" class="esp-info-btn" data-esp-info aria-expanded="false" aria-label="How it works" title="How it works">&#9432;</button>
+            </p>
             <div class="mgmt-pane-actions">
                 <form method="get" class="d-flex gap-2" role="search">
                     <input type="hidden" name="tab" value="learning">
@@ -76,78 +95,20 @@
                 <a data-esp-modal href="{% url 'manage_add' model_name='course' %}" class="btn btn-sm btn-primary">&#10133; New Course</a>
             </div>
         </div>
+        <div class="esp-info-pop alert alert-info" hidden>
+            <strong>How it works:</strong> a <strong>Course</strong> contains <strong>Chapters</strong> &rarr;
+            each chapter contains <strong>Lessons</strong> &rarr; each lesson contains
+            <strong>Speaking exercises</strong>. Use <strong>&#10133;</strong> to add a child item,
+            &#9999; to edit, &#128465; to delete.
+        </div>
         {% include '_manage_tree.html' %}
     </div>
     {% endif %}
 
-    {# ---------------- Tab: People ---------------- #}
-    <div class="tab-pane fade" id="pane-people" role="tabpanel" aria-labelledby="tab-people">
-        <div class="mgmt-pane-head">
-            <p class="text-muted">{% if is_admin %}Accounts for admins, teachers, students and parents. Deleting a user also removes their profile and links.{% else %}Students learning with you and their linked parents.{% endif %}</p>
-            <div class="mgmt-pane-actions">
-                <form method="get" class="d-flex gap-2" role="search">
-                    <input type="hidden" name="tab" value="people">
-                    <input type="search" name="q_people" value="{{ q_people }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search name, email&hellip;" aria-label="Search people">
-                    <select name="role" class="form-select form-select-sm" aria-label="Filter by role" style="max-width: 130px;">
-                        <option value="">All roles</option>
-                        {% for value, label in role_choices %}
-                        <option value="{{ value }}"{% if role_filter == value %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
-                    {% if q_people or role_filter %}<a href="?tab=people" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
-                </form>
-                {% if can_manage_people %}
-                <a data-esp-modal href="{% url 'manage_add' model_name='user' %}" class="btn btn-sm btn-primary">&#10133; New User</a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        {% if can_manage_people %}<th class="text-end">Actions</th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                    <tr>
-                        <td><strong>{{ u.username }}</strong>{% if u == request.user %} <span class="badge bg-info text-dark">you</span>{% endif %}</td>
-                        <td><span class="badge {% if u.role == 'admin' %}bg-danger{% elif u.role == 'teacher' %}bg-primary{% elif u.role == 'student' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ u.get_role_display }}</span></td>
-                        <td>{{ u.get_full_name|default:"&mdash;" }}</td>
-                        <td>{{ u.email|default:"&mdash;" }}</td>
-                        <td>{{ u.phone_number|default:"&mdash;" }}</td>
-                        <td>
-                            {% if u.is_active %}<span class="badge bg-success">Active</span>
-                            {% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}
-                        </td>
-                        {% if can_manage_people %}
-                        <td class="text-end">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="User actions">
-                                <a data-esp-modal href="{% url 'manage_edit' model_name='user' pk=u.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                                <a data-esp-modal href="{% url 'manage_delete' model_name='user' pk=u.pk %}" class="btn btn-outline-danger">&#128465;</a>
-                            </div>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="7" class="text-muted">No users found.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {# ---------------- Tab: Links & Practice ---------------- #}
+    {# ---------------- Tab: Links & Practice (classes live here) ---------------- #}
     <div class="tab-pane fade" id="pane-links" role="tabpanel" aria-labelledby="tab-links">
         <div class="mgmt-pane-head">
-            <p class="text-muted">Relationships and lesson assignments. A student can be linked to at most 2 parents.</p>
+            <p class="text-muted">Relationships, classes and lesson assignments. A student can be linked to at most 2 parents.</p>
             <div class="mgmt-pane-actions">
                 <form method="get" class="d-flex gap-2" role="search">
                     <input type="hidden" name="tab" value="links">
@@ -158,6 +119,60 @@
                 <a data-esp-modal href="{% url 'manage_assign' %}" class="btn btn-sm btn-primary">&#128228; Assign Lesson</a>
             </div>
         </div>
+
+        <div class="card esp-card mb-4" id="classes-card">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0">&#127979; Classes</h5>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <form method="get" class="d-flex gap-2" role="search">
+                            <input type="hidden" name="tab" value="links">
+                            <input type="search" name="q_class" value="{{ q_class }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search class&hellip;" aria-label="Search classes">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
+                            {% if q_class %}<a href="?tab=links" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
+                        </form>
+                        <a data-esp-modal href="{% url 'class_add' %}" class="btn btn-sm btn-primary">&#10133; New Class</a>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0 mt-1">{% if is_admin %}Study classes created by teachers.{% else %}Group your students into named classes (e.g. 7/13) to assign lessons to everyone at once.{% endif %}</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for class in study_classes %}
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h6 class="mb-0">{{ class.name }}</h6>
+                                    <small class="text-muted">{{ class.students.count }} student(s){% if is_admin %} &middot; {{ class.teacher.user.username }}{% endif %}</small>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Class actions">
+                                    <a data-esp-modal href="{% url 'class_edit' pk=class.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                    <a data-esp-modal href="{% url 'class_delete' pk=class.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% for student in class.students.all %}
+                                    <span class="esp-student-chip">{{ student.user.username }}
+                                        <form method="post" action="{% url 'class_remove_student' pk=class.pk student_pk=student.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="/manage/?tab=links">
+                                            <button type="submit" class="esp-chip-x" title="Remove from class" aria-label="Remove {{ student.user.username }} from class {{ class.name }}" onclick="return confirm('Remove {{ student.user.username }} from class {{ class.name }}?')">&times;</button>
+                                        </form>
+                                    </span>
+                                {% empty %}
+                                    <span class="text-muted small">No students yet — edit the class to add some.</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12"><p class="text-muted mb-0">No classes found. <a data-esp-modal href="{% url 'class_add' %}">Create the first one</a>.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card esp-card h-100">
@@ -236,46 +251,71 @@
         </div>
     </div>
 
-    {# ---------------- Tab: Classes ---------------- #}
-    <div class="tab-pane fade" id="pane-classes" role="tabpanel" aria-labelledby="tab-classes">
+    {# ---------------- Tab: People ---------------- #}
+    <div class="tab-pane fade" id="pane-people" role="tabpanel" aria-labelledby="tab-people">
         <div class="mgmt-pane-head">
-            <p class="text-muted">{% if is_admin %}Study classes created by teachers.{% else %}Group your students into named classes (e.g. 7/13) to assign lessons to everyone at once.{% endif %}</p>
+            <div>
+                <p class="text-muted">{% if is_admin %}Accounts for admins, teachers, students and parents. Deleting a user also removes their profile and links.{% else %}Students learning with you and their linked parents.{% endif %}</p>
+                <p class="small mt-1 mb-0"><span class="badge bg-primary">{{ role_counts.total }} user{{ role_counts.total|pluralize }}</span>
+                    <span class="text-muted">{{ role_counts.admin }} Admin &middot; {{ role_counts.teacher }} Teacher{{ role_counts.teacher|pluralize }} &middot; {{ role_counts.student }} Student{{ role_counts.student|pluralize }} &middot; {{ role_counts.parent }} Parent{{ role_counts.parent|pluralize }}</span></p>
+            </div>
             <div class="mgmt-pane-actions">
                 <form method="get" class="d-flex gap-2" role="search">
-                    <input type="hidden" name="tab" value="classes">
-                    <input type="search" name="q_class" value="{{ q_class }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search class&hellip;" aria-label="Search classes">
+                    <input type="hidden" name="tab" value="people">
+                    <input type="search" name="q_people" value="{{ q_people }}" class="form-control form-control-sm mgmt-filter-input" placeholder="Search name, email&hellip;" aria-label="Search people">
+                    <select name="role" class="form-select form-select-sm" aria-label="Filter by role" style="max-width: 130px;">
+                        <option value="">All roles</option>
+                        {% for value, label in role_choices %}
+                        <option value="{{ value }}"{% if role_filter == value %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                     <button type="submit" class="btn btn-sm btn-outline-primary">Filter</button>
-                    {% if q_class %}<a href="?tab=classes" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
+                    {% if q_people or role_filter %}<a href="?tab=people" class="btn btn-sm btn-outline-secondary">Clear</a>{% endif %}
                 </form>
-                <a data-esp-modal href="{% url 'class_add' %}" class="btn btn-sm btn-primary">&#10133; New Class</a>
+                {% if can_manage_people %}
+                <a data-esp-modal href="{% url 'manage_add' model_name='user' %}" class="btn btn-sm btn-primary">&#10133; New User</a>
+                {% endif %}
             </div>
         </div>
-        <div class="row g-3">
-            {% for class in study_classes %}
-            <div class="col-lg-6">
-                <div class="card esp-card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <h5 class="mb-0">&#127979; {{ class.name }}</h5>
-                            <small class="text-muted">{{ class.students.count }} student(s){% if is_admin %} &middot; {{ class.teacher.user.username }}{% endif %}</small>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Class actions">
-                            <a data-esp-modal href="{% url 'class_edit' pk=class.pk %}" class="btn btn-outline-secondary">&#9999;</a>
-                            <a data-esp-modal href="{% url 'class_delete' pk=class.pk %}" class="btn btn-outline-danger">&#128465;</a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        {% for student in class.students.all %}
-                            <span class="badge bg-light text-dark border me-1 mb-1">{{ student.user.username }}</span>
-                        {% empty %}
-                            <span class="text-muted small">No students yet — edit the class to add some.</span>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12"><div class="alert alert-info mb-0">No classes found. <a data-esp-modal href="{% url 'class_add' %}">Create the first one</a>.</div></div>
-            {% endfor %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        {% if can_manage_people %}<th class="text-end">Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><strong>{{ u.username }}</strong>{% if u == request.user %} <span class="badge bg-info text-dark">you</span>{% endif %}</td>
+                        <td><span class="badge {% if u.role == 'admin' %}bg-danger{% elif u.role == 'teacher' %}bg-primary{% elif u.role == 'student' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ u.get_role_display }}</span></td>
+                        <td>{{ u.get_full_name|default:"&mdash;" }}</td>
+                        <td>{{ u.email|default:"&mdash;" }}</td>
+                        <td>{{ u.phone_number|default:"&mdash;" }}</td>
+                        <td>
+                            {% if u.is_active %}<span class="badge bg-success">Active</span>
+                            {% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}
+                        </td>
+                        {% if can_manage_people %}
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="User actions">
+                                <a data-esp-modal href="{% url 'manage_edit' model_name='user' pk=u.pk %}" class="btn btn-outline-secondary">&#9999;</a>
+                                <a data-esp-modal href="{% url 'manage_delete' model_name='user' pk=u.pk %}" class="btn btn-outline-danger">&#128465;</a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-muted">No users found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -310,7 +350,7 @@
                         <td>{% if lesson.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-warning text-dark">Hidden</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group" aria-label="Lesson actions">
-                                <a href="{% url 'lesson_detail' lesson_id=lesson.pk %}" class="btn btn-outline-primary" title="Preview">&#128065;</a>
+                                <a data-esp-modal href="{% url 'lesson_preview' pk=lesson.pk %}" class="btn btn-outline-primary" title="Preview">&#128065;</a>
                                 <a data-esp-modal href="{% url 'manage_edit' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-secondary" title="Edit">&#9999;</a>
                                 <a data-esp-modal href="{% url 'manage_delete' model_name='lesson' pk=lesson.pk %}" class="btn btn-outline-danger" title="Delete">&#128465;</a>
                             </div>
@@ -354,21 +394,46 @@
             document.querySelectorAll('#pane-learning .esp-twisty-item')
                 .forEach(function (item) { setItem(item, false); });
         }
+        var infoBtn = e.target.closest('[data-esp-info]');
+        if (infoBtn) {
+            var pop = infoBtn.closest('.mgmt-pane-head').parentElement
+                .querySelector('.esp-info-pop');
+            if (pop) {
+                var willShow = pop.hasAttribute('hidden');
+                if (willShow) { pop.removeAttribute('hidden'); }
+                else { pop.setAttribute('hidden', ''); }
+                infoBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            }
+        }
     });
 })();
 
-/* Tab deep-linking: ?tab=people|links|classes|lessons|learning, then #hash. */
+/* Tab deep-linking: ?tab= > #hash > remembered tab > first tab.
+   The active tab is remembered so modal actions land back here. */
 (function () {
+    var TAB_KEY = 'esp-manage-tab';
+    function remember(id) {
+        try { sessionStorage.setItem(TAB_KEY, id); } catch (e) {}
+    }
+    function remembered() {
+        try { return sessionStorage.getItem(TAB_KEY); } catch (e) { return null; }
+    }
     var params = new URLSearchParams(window.location.search);
     var map = {
         'learning': 'tab-learning', 'people': 'tab-people',
-        'links': 'tab-links', 'classes': 'tab-classes',
-        'lessons': 'tab-lessons'
+        'links': 'tab-links', 'lessons': 'tab-lessons'
     };
     function show(id) {
         var btn = document.getElementById(id);
-        if (btn && window.bootstrap) bootstrap.Tab.getOrCreateInstance(btn).show();
-        else if (btn) {
+        if (!btn) {
+            var fallback = document.querySelector('#mgmtTabs .nav-link');
+            if (!fallback) return;
+            btn = fallback;
+        }
+        remember(btn.id);
+        if (window.bootstrap) {
+            bootstrap.Tab.getOrCreateInstance(btn).show();
+        } else {
             // Fallback when Bootstrap JS is unavailable.
             document.querySelectorAll('#mgmtTabs .nav-link').forEach(function (b) {
                 b.classList.remove('active');
@@ -384,15 +449,22 @@
         }
     }
     var fromParam = map[params.get('tab')];
-    var hashMap = { '#people': 'tab-people', '#links': 'tab-links', '#classes': 'tab-classes', '#learning': 'tab-learning', '#lessons': 'tab-lessons' };
+    var hashMap = { '#people': 'tab-people', '#links': 'tab-links', '#learning': 'tab-learning', '#lessons': 'tab-lessons' };
     var fromHash = hashMap[window.location.hash];
-    var fallback = document.querySelector('#mgmtTabs .nav-link');
-    show(fromParam || fromHash || (fallback && fallback.id));
+    var stored = remembered();
+    var fromStored = stored && document.getElementById(stored) ? stored : null;
+    show(fromParam || fromHash || fromStored || 'tab-nonexistent-fallback');
+    function noteTab(btn) {
+        var pane = btn.getAttribute('data-bs-target');
+        var rev = { '#pane-learning': 'learning', '#pane-people': 'people', '#pane-links': 'links', '#pane-lessons': 'lessons' };
+        remember(btn.id);
+        history.replaceState(null, '', '?tab=' + (rev[pane] || 'links'));
+    }
     document.querySelectorAll('#mgmtTabs [data-bs-toggle="tab"]').forEach(function (btn) {
-        btn.addEventListener('shown.bs.tab', function () {
-            var pane = btn.getAttribute('data-bs-target');
-            var rev = { '#pane-learning': 'learning', '#pane-people': 'people', '#pane-links': 'links', '#pane-classes': 'classes', '#pane-lessons': 'lessons' };
-            history.replaceState(null, '', '?tab=' + (rev[pane] || 'learning'));
+        btn.addEventListener('shown.bs.tab', function () { noteTab(btn); });
+        btn.addEventListener('click', function () {
+            // Fallback path (no Bootstrap JS): switch and remember the tab.
+            if (!window.bootstrap) { show(btn.id); noteTab(btn); }
         });
     });
 })();

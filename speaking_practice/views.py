@@ -1,3 +1,5 @@
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,7 +9,8 @@ from django.db.models import Max
 from .changelog import changelog_for, log_change
 from .models import (
     User, StudentProfile, TeacherProfile, ParentProfile,
-    StudentLesson, Lesson, Exercise, SpeakingAttempt, Chapter
+    StudentLesson, Lesson, Exercise, SpeakingAttempt, Chapter,
+    StudyClass,
 )
 
 # Max upload size for a recorded speaking attempt (20 MB)
@@ -41,6 +44,7 @@ def dashboard(request):
             'student_count': StudentProfile.objects.count(),
             'teacher_count': TeacherProfile.objects.count(),
             'parent_count': ParentProfile.objects.count(),
+            'class_count': StudyClass.objects.count(),
             'changelog': changelog_for(user, limit=15),
         }
         return render(request, 'dashboard_admin.html', context)
@@ -57,6 +61,8 @@ def dashboard(request):
         return render(request, 'dashboard_teacher.html', {
             'students': students,
             'lessons': lessons,
+            'class_count': StudyClass.objects.filter(
+                teacher=teacher_profile).count(),
             'changelog': changelog_for(user, limit=10),
         })
 
@@ -168,6 +174,20 @@ def profile(request):
         if role_profile is not None:
             break
 
+    password_form = PasswordChangeForm(user)
+    for pwd_field in password_form.fields.values():
+        pwd_field.widget.attrs['class'] = 'form-control'
+    if request.method == 'POST' and 'change_password' in request.POST:
+        password_form = PasswordChangeForm(user, request.POST)
+        for pwd_field in password_form.fields.values():
+            pwd_field.widget.attrs['class'] = 'form-control'
+        if password_form.is_valid():
+            password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password has been changed.')
+            return redirect('profile')
+        messages.error(request, 'Please fix the errors below.')
+
     capabilities = {
         'admin': [
             'Management Center: manage courses, chapters, lessons, exercises',
@@ -195,6 +215,7 @@ def profile(request):
     return render(request, 'profile.html', {
         'role_profile': role_profile,
         'capabilities': capabilities,
+        'password_form': password_form,
     })
 
 

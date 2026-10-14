@@ -100,6 +100,4 @@
         </div>
     </div>
     {% endwith %}
-{% empty %}
-    <div class="alert alert-info">No courses yet. <a data-esp-modal href="{% url 'manage_add' model_name='course' %}">Create your first course</a> to start building lessons.</div>
 {% endfor %}
