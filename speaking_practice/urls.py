@@ -10,6 +10,7 @@ urlpatterns = [
     path('lessons/', views.lesson_list, name='lesson_list'),
     path('lesson/<int:lesson_id>/', views.lesson_detail, name='lesson_detail'),
     path('lesson/<int:lesson_id>/attempt/<int:exercise_id>/', views.create_speaking_attempt, name='create_speaking_attempt'),
+    path('attempt/<int:attempt_id>/edit/', views.update_speaking_attempt, name='update_speaking_attempt'),
     
     # Teacher lesson management URLs
     path('teacher/lesson/create/', views.teacher_create_lesson, name='teacher_create_lesson'),

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load esp_tags %}
 
 {% block title %}My Speaking Practice{% endblock %}
 
@@ -7,7 +8,10 @@
     <div class="row align-items-center position-relative" style="z-index:1;">
         <div class="col-lg-8">
             <h2 class="mb-2">Chào buổi chiều, {{ user.username }}! &#128075;</h2>
-            <p class="mb-3" style="color:#cdd9f5;">Chọn một bài học và giữ vững phong độ luyện nói mỗi ngày nhé.</p>
+            <p class="mb-3" style="color:#cdd9f5;">
+                {% if completed_lessons %}Bạn đã hoàn thành {{ completed_lessons|length }}/{{ assigned_lessons|length }} bài được giao. Cố lên!
+                {% else %}Chọn một bài học và giữ vững phong độ luyện nói mỗi ngày nhé.{% endif %}
+            </p>
             <span class="esp-streak-pill">&#128293; {{ attempt_count }} lượt luyện tập</span>
         </div>
         <div class="col-lg-4 text-center d-none d-lg-block" style="font-size:4.5rem;" aria-hidden="true">&#128266;</div>
@@ -19,8 +23,8 @@
         <div class="card esp-stat-card esp-stat-blue h-100">
             <div class="card-body">
                 <div class="k">Bài được giao</div>
-                <div class="v">{{ assigned_lessons|length }}</div>
-                <div class="d">từ giáo viên của bạn</div>
+                <div class="v">{{ active_lessons|length }}</div>
+                <div class="d">còn lại (đã trừ bài xong)</div>
                 <div class="bg-ico">&#128218;</div>
             </div>
         </div>
@@ -38,9 +42,9 @@
     <div class="col-md-4">
         <div class="card esp-stat-card esp-stat-green h-100">
             <div class="card-body">
-                <div class="k">Bài đã thử gần đây</div>
-                <div class="v">{{ recent_attempts|length }}</div>
-                <div class="d">trong 5 lần gần nhất</div>
+                <div class="k">Bài hoàn thành</div>
+                <div class="v">{{ completed_lessons|length }}/{{ assigned_lessons|length }}</div>
+                <div class="d">tiếp tục phát huy!</div>
                 <div class="bg-ico">&#9989;</div>
             </div>
         </div>
@@ -69,31 +73,28 @@
         <div class="card esp-card h-100">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">&#128218; Bài học của tôi</h5>
-                {% if assigned_lessons %}
-                    {% with first=assigned_lessons.0 %}
-                    <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded" style="background:var(--esp-sky-soft);border:1px solid var(--esp-line);">
-                        <div class="esp-icon-tile esp-tile-amber">&#127919;</div>
+                {% if active_lessons %}
+                    {% for p in active_lessons %}
+                    <div class="esp-lesson-row">
+                        <div class="esp-icon-tile esp-tile-blue" style="width:44px;height:44px;font-size:1.3rem;">&#128483;</div>
                         <div class="flex-grow-1">
-                            <h6 class="fw-bold mb-1">Tiếp tục: {{ first.lesson.title }}</h6>
-                            <small class="text-muted">{{ first.lesson.chapter.course.title }} &rsaquo; {{ first.lesson.chapter.title }}</small>
+                            <h6>{{ p.lesson.title }}
+                                {% if p.done == 0 %}<span class="esp-pill esp-pill-gray ms-1">Chưa bắt đầu</span>
+                                {% else %}<span class="esp-pill esp-pill-amber ms-1">Đang làm · {{ p.done }}/{{ p.total }}</span>{% endif %}
+                            </h6>
+                            <small class="text-muted">{{ p.lesson.chapter.course.title }} &rsaquo; {{ p.lesson.chapter.title }}</small>
+                            {% if p.done %}<div class="esp-progress esp-progress-blue mt-2" style="max-width:280px;"><i style="width:{{ p.pct }}%;"></i></div>{% endif %}
                         </div>
-                        <a href="{% url 'lesson_detail' first.lesson.id %}" class="esp-btn esp-btn-warm" style="padding:.55rem 1.3rem;font-size:.9rem;">Luyện tiếp &#8594;</a>
+                        <button type="button" class="esp-btn {% if p.done %}esp-btn-warm{% else %}esp-btn-primary{% endif %}" style="padding:.55rem 1.3rem;font-size:.9rem;" data-bs-toggle="modal" data-bs-target="#practice-modal-{{ p.lesson.id }}">
+                            {% if p.done %}Luyện tiếp &#8594;{% else %}Bắt đầu &#8594;{% endif %}
+                        </button>
                     </div>
-                    {% endwith %}
-                    <div>
-                        {% for item in assigned_lessons %}
-                        <a href="{% url 'lesson_detail' item.lesson.id %}" class="esp-lesson-row">
-                            <div class="esp-icon-tile esp-tile-blue" style="width:44px;height:44px;font-size:1.3rem;">&#128483;</div>
-                            <div class="flex-grow-1">
-                                <h6>{{ item.lesson.title }}</h6>
-                                <small class="text-muted">{{ item.lesson.chapter.course.title }} &rsaquo; {{ item.lesson.chapter.title }}</small>
-                            </div>
-                            <span style="color:var(--esp-primary);font-weight:900;">&#8594;</span>
-                        </a>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 {% else %}
-                    <p class="text-muted mb-0">Chưa có bài nào được giao. Nhờ giáo viên giao bài luyện nói cho bạn nhé!</p>
+                    <p class="text-muted mb-0">
+                        {% if completed_lessons %}Tuyệt vời! Bạn đã hoàn thành tất cả bài được giao. 🎉
+                        {% else %}Chưa có bài nào được giao. Nhờ giáo viên giao bài luyện nói cho bạn nhé!{% endif %}
+                    </p>
                 {% endif %}
             </div>
         </div>
@@ -110,6 +111,7 @@
                             <h6 class="fw-bold mb-0" style="font-size:.95rem;">{{ att.exercise.lesson.title }}</h6>
                             <small class="text-muted">{{ att.created_at|date:"d/m/Y H:i" }}</small>
                         </div>
+                        <a href="{% url 'update_speaking_attempt' attempt_id=att.id %}" class="btn btn-sm btn-outline-secondary" title="Sửa bài làm">&#9999;</a>
                         {% if att.total_score %}<span class="esp-pill esp-pill-green">{{ att.total_score|floatformat:0 }} điểm</span>{% endif %}
                     </div>
                     {% endfor %}
@@ -120,4 +122,87 @@
         </div>
     </div>
 </div>
+
+{% if completed_lessons %}
+<div class="card esp-card mt-4" style="border-color:#bbf7d0;">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">&#9989; Đã hoàn thành ({{ completed_lessons|length }})</h5>
+        {% for p in completed_lessons %}
+        <div class="d-flex align-items-center gap-3 py-2" style="border-bottom:1px solid #eef3fb;">
+            <div class="esp-icon-tile esp-tile-green" style="width:44px;height:44px;font-size:1.3rem;">&#127881;</div>
+            <div class="flex-grow-1">
+                <h6 class="fw-bold mb-0">{{ p.lesson.title }} <span class="esp-pill esp-pill-green ms-1">Hoàn thành ✓</span></h6>
+                <small class="text-muted">{{ p.total }}/{{ p.total }} bài tập đã nộp</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#practice-modal-{{ p.lesson.id }}">Xem lại</button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# Practice modals: one per assigned lesson, everything happens on the dashboard. #}
+{% for p in modal_lessons %}
+<div class="modal fade" id="practice-modal-{{ p.lesson.id }}" tabindex="-1" aria-labelledby="practice-modal-label-{{ p.lesson.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:1.2rem;border:0;">
+            <div class="modal-header" style="border-bottom:1px solid #eef3fb;">
+                <div>
+                    <h5 class="modal-title fw-bold" id="practice-modal-label-{{ p.lesson.id }}">&#127908; Luyện tập: {{ p.lesson.title }}</h5>
+                    <small class="text-muted">Nộp và sửa bài ngay tại đây — không cần chuyển trang</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                {% for ex in p.exercises %}
+                    {% with att=p.latest_attempts|get_item:ex.id %}
+                    <div class="card mb-3 {% if att %}border-success{% endif %}" style="border-radius:.9rem;">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="font-size:1.6rem;">{% if att %}&#9989;{% else %}&#127908;{% endif %}</div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-1">Bài {{ forloop.counter }}: {{ ex.title }}</h6>
+                                    {% if att %}
+                                        <small class="text-muted">Đã nộp · {{ att.created_at|date:"d/m H:i" }}</small>
+                                    {% elif ex.expected_text %}
+                                        <small class="text-muted"><em>"{{ ex.expected_text|truncatechars:80 }}"</em></small>
+                                    {% endif %}
+                                </div>
+                                {% if att %}
+                                    <a href="{% url 'update_speaking_attempt' attempt_id=att.id %}" class="btn btn-sm btn-outline-secondary">&#9999; Sửa</a>
+                                {% endif %}
+                                <button class="btn btn-sm {% if att %}btn-outline-primary{% else %}btn-primary{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#ex-form-{{ p.lesson.id }}-{{ ex.id }}" aria-expanded="false">
+                                    {% if att %}Nộp lại{% else %}Ghi âm &amp; nộp{% endif %}
+                                </button>
+                            </div>
+                            <div class="collapse mt-3" id="ex-form-{{ p.lesson.id }}-{{ ex.id }}">
+                                <form method="post" enctype="multipart/form-data" action="{% if att %}{% url 'update_speaking_attempt' attempt_id=att.id %}{% else %}{% url 'create_speaking_attempt' lesson_id=p.lesson.id exercise_id=ex.id %}{% endif %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="dashboard">
+                                    {% if ex.expected_text and not att %}
+                                    <div class="alert alert-primary py-2"><strong>&#128483;</strong> <em>"{{ ex.expected_text }}"</em></div>
+                                    {% endif %}
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">&#127908; Bản ghi âm {% if att %}(để trống nếu giữ bản cũ){% endif %}</label>
+                                        <input type="file" class="form-control" name="recorded_audio" accept="audio/*">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">&#9999; Những gì bạn đã nói</label>
+                                        <textarea class="form-control" name="transcript" rows="3" required placeholder="Nhập câu tiếng Anh bạn đã nói...">{% if att %}{{ att.transcript }}{% endif %}</textarea>
+                                    </div>
+                                    <button type="submit" class="esp-btn {% if att %}esp-btn-warm{% else %}esp-btn-primary{% endif %}" style="padding:.5rem 1.4rem;font-size:.9rem;">
+                                        {% if att %}&#10003; Lưu thay đổi{% else %}&#10003; Nộp bài{% endif %}
+                                    </button>
+                                    {% if att %}<small class="text-muted ms-2">Mỗi lần sửa đều được ghi vào lịch sử.</small>{% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

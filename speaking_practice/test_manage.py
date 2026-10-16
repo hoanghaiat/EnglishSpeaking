@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .models import (
+    ChangeLog,
     Chapter,
     Course,
     Exercise,
@@ -1361,3 +1362,112 @@ class DashboardRedesignTests(TestCase):
         html = r.content.decode()
         self.assertIn('esp-week-chart', html)
         self.assertIn('Hoạt động 7 ngày qua', html)
+
+
+class PracticeFlowTests(TestCase):
+    """Inline practice on the dashboard: completion status, editing an
+    attempt (logged to history), and role-personalised home cards."""
+
+    def setUp(self):
+        self.student = make_user('p_stu', 'student')
+        self.sp = StudentProfile.objects.create(user=self.student)
+        self.other = make_user('p_stu2', 'student')
+        self.sp2 = StudentProfile.objects.create(user=self.other)
+        self.teacher = make_user('p_tch', 'teacher')
+        TeacherProfile.objects.create(user=self.teacher)
+        self.admin = make_user('p_adm', 'admin', is_staff=True,
+                               is_superuser=True)
+        course = Course.objects.create(title='P Course')
+        ch = Chapter.objects.create(course=course, title='P Ch', order=1)
+        self.lesson = Lesson.objects.create(chapter=ch, title='P Lesson',
+                                            order=1)
+        self.ex1 = Exercise.objects.create(lesson=self.lesson, title='Ex 1',
+                                           order=1)
+        self.ex2 = Exercise.objects.create(lesson=self.lesson, title='Ex 2',
+                                           order=2)
+        StudentLesson.objects.create(student=self.sp, lesson=self.lesson)
+
+    def _attempt(self, student, exercise, transcript='hello world'):
+        return SpeakingAttempt.objects.create(
+            student=student, exercise=exercise, transcript=transcript)
+
+    def test_lesson_not_complete_until_all_exercises_attempted(self):
+        self.client.force_login(self.student)
+        r = self.client.get(reverse('dashboard'))
+        active = r.context['active_lessons']
+        self.assertEqual(len(active), 1)
+        self.assertEqual(r.context['completed_lessons'], [])
+        self.assertEqual(active[0]['done'], 0)
+        self._attempt(self.sp, self.ex1)
+        r = self.client.get(reverse('dashboard'))
+        self.assertEqual(r.context['active_lessons'][0]['done'], 1)
+        self.assertFalse(r.context['active_lessons'][0]['is_complete'])
+        self._attempt(self.sp, self.ex2)
+        r = self.client.get(reverse('dashboard'))
+        self.assertEqual(r.context['completed_lessons'][0]['is_complete'], True)
+        self.assertEqual(r.context['active_lessons'], [])
+
+    def test_student_can_edit_own_attempt_and_it_is_logged(self):
+        att = self._attempt(self.sp, self.ex1, transcript='old text')
+        self.client.force_login(self.student)
+        url = reverse('update_speaking_attempt', args=[att.id])
+        r = self.client.post(url, {'transcript': 'new text',
+                                   'feedback': '', 'next': 'dashboard'})
+        self.assertRedirects(r, reverse('dashboard'))
+        att.refresh_from_db()
+        self.assertEqual(att.transcript, 'new text')
+        entry = ChangeLog.objects.filter(category='practice',
+                                         action='update').last()
+        self.assertIsNotNone(entry)
+        self.assertIn(self.student.username, entry.summary)
+        self.assertEqual(entry.related_student, self.sp)
+
+    def test_student_cannot_edit_someone_elses_attempt(self):
+        att = self._attempt(self.sp2, self.ex1)
+        self.client.force_login(self.student)
+        url = reverse('update_speaking_attempt', args=[att.id])
+        r = self.client.post(url, {'transcript': 'hacked'})
+        self.assertRedirects(r, reverse('dashboard'))
+        att.refresh_from_db()
+        self.assertEqual(att.transcript, 'hello world')
+        self.assertFalse(ChangeLog.objects.filter(
+            category='practice', action='update').exists())
+
+    def test_teacher_cannot_edit_attempt(self):
+        att = self._attempt(self.sp, self.ex1)
+        self.client.force_login(self.teacher)
+        url = reverse('update_speaking_attempt', args=[att.id])
+        r = self.client.post(url, {'transcript': 'hacked'})
+        self.assertRedirects(r, reverse('dashboard'))
+        att.refresh_from_db()
+        self.assertEqual(att.transcript, 'hello world')
+
+    def test_create_attempt_next_dashboard_redirects_to_dashboard(self):
+        self.client.force_login(self.student)
+        url = reverse('create_speaking_attempt',
+                      args=[self.lesson.id, self.ex2.id])
+        r = self.client.post(url, {'transcript': 'some words',
+                                   'next': 'dashboard'})
+        self.assertRedirects(r, reverse('dashboard'))
+        self.assertTrue(SpeakingAttempt.objects.filter(
+            student=self.sp, exercise=self.ex2).exists())
+
+    def test_home_role_cards_are_personalised(self):
+        # Student sees only the student card.
+        self.client.force_login(self.student)
+        html = self.client.get(reverse('home')).content.decode()
+        self.assertIn('Vai trò của bạn', html)
+        self.assertIn('Bắt đầu học', html)
+        self.assertNotIn('Quản lý lớp', html)
+        # Teacher sees only the teacher card.
+        self.client.force_login(self.teacher)
+        html = self.client.get(reverse('home')).content.decode()
+        self.assertIn('Quản lý lớp', html)
+        self.assertNotIn('Bắt đầu học', html)
+        # Admin sees all three.
+        self.client.force_login(self.admin)
+        html = self.client.get(reverse('home')).content.decode()
+        self.assertIn('Bắt đầu học', html)
+        self.assertIn('Quản lý lớp', html)
+        self.assertIn('Xem tiến độ', html)
+        self.assertNotIn('Vai trò của bạn', html)

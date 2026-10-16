@@ -88,12 +88,23 @@
     </div>
 </div>
 
+{% if user.role == 'admin' %}
 <h3 class="fw-bold text-center mb-1">Dành cho tất cả mọi người</h3>
 <p class="text-muted text-center mb-4">Mỗi vai trò có một góc nhìn riêng, cùng hướng tới mục tiêu chung.</p>
-<div class="row g-4 mb-5">
-    <div class="col-md-4">
-        <div class="card esp-card esp-card-hover h-100">
+{% else %}
+<h3 class="fw-bold text-center mb-1">Dành cho bạn</h3>
+<p class="text-muted text-center mb-4">
+    {% if user.role == 'teacher' %}Không gian quản lý lớp học và bài giảng của thầy/cô.
+    {% elif user.role == 'parent' %}Đồng hành cùng con trên hành trình luyện nói.
+    {% else %}Không gian luyện nói dành riêng cho học sinh.{% endif %}
+</p>
+{% endif %}
+<div class="row g-4 mb-5{% if user.role != 'admin' %} justify-content-center{% endif %}">
+    {% if user.role == 'student' or user.role == 'admin' %}
+    <div class="{% if user.role == 'admin' %}col-md-4{% else %}col-md-5{% endif %}">
+        <div class="card esp-card esp-card-hover h-100"{% if user.role != 'admin' %} style="border:2.5px solid var(--esp-amber);"{% endif %}>
             <div class="card-body p-4 text-center">
+                {% if user.role != 'admin' %}<span class="esp-pill esp-pill-blue mb-2">Vai trò của bạn</span><br>{% endif %}
                 <div class="esp-icon-tile esp-tile-amber mb-3">&#127891;</div>
                 <h5 class="fw-bold">Học sinh</h5>
                 <p class="text-muted">Luyện nói mỗi ngày, theo dõi streak và tiến bộ của chính mình.</p>
@@ -101,23 +112,25 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card esp-card esp-card-hover h-100">
+    {% endif %}
+    {% if user.role == 'teacher' or user.role == 'admin' %}
+    <div class="{% if user.role == 'admin' %}col-md-4{% else %}col-md-5{% endif %}">
+        <div class="card esp-card esp-card-hover h-100"{% if user.role != 'admin' %} style="border:2.5px solid var(--esp-primary);"{% endif %}>
             <div class="card-body p-4 text-center">
+                {% if user.role != 'admin' %}<span class="esp-pill esp-pill-blue mb-2">Vai trò của bạn</span><br>{% endif %}
                 <div class="esp-icon-tile esp-tile-blue mb-3">&#128104;&#8205;&#127979;</div>
                 <h5 class="fw-bold">Giáo viên</h5>
                 <p class="text-muted">Tạo lớp học, giao bài và theo dõi từng học sinh trong lớp.</p>
-                {% if user.role == 'teacher' or user.role == 'admin' %}
                 <a href="{% url 'manage_center' %}" class="esp-btn esp-btn-primary" style="padding:.55rem 1.4rem;font-size:.9rem;">Quản lý lớp</a>
-                {% else %}
-                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary" style="padding:.55rem 1.4rem;font-size:.9rem;">Vào Dashboard</a>
-                {% endif %}
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card esp-card esp-card-hover h-100">
+    {% endif %}
+    {% if user.role == 'parent' or user.role == 'admin' %}
+    <div class="{% if user.role == 'admin' %}col-md-4{% else %}col-md-5{% endif %}">
+        <div class="card esp-card esp-card-hover h-100"{% if user.role != 'admin' %} style="border:2.5px solid var(--esp-green);"{% endif %}>
             <div class="card-body p-4 text-center">
+                {% if user.role != 'admin' %}<span class="esp-pill esp-pill-blue mb-2">Vai trò của bạn</span><br>{% endif %}
                 <div class="esp-icon-tile esp-tile-green mb-3">&#128106;</div>
                 <h5 class="fw-bold">Phụ huynh</h5>
                 <p class="text-muted">Đồng hành cùng con, nắm rõ tiến độ học tập mỗi tuần.</p>
@@ -125,6 +138,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="esp-cta-banner p-4 p-lg-5 mb-4 text-center">

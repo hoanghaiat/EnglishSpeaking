@@ -177,6 +177,16 @@
         })();
     </script>
     <script>
+        // Move server-rendered Bootstrap modals out of <main> (which creates
+        // a stacking context for the particle canvas) so the modal backdrop
+        // never covers the modal itself.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('main .modal').forEach(function (el) {
+                document.body.appendChild(el);
+            });
+        });
+    </script>
+    <script>
         // Auto-dismiss site notifications after 3 seconds (they can also be closed manually).
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.alert-dismissible').forEach(function (el) {

@@ -10,7 +10,28 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Redesign UI batch 1.5: home thêm nhịp điệu + biểu đồ tuần dashboard HS (2026-10-16)
+## <next> — Batch 2: role card cá nhân hóa + dashboard HS luyện inline + sửa bài log history (2026-10-16)
+
+Theo mockup v2 Hoàng đã duyệt + yêu cầu "HS được sửa bài đã nộp, log vào history".
+- `home`: mỗi role chỉ thấy đúng 1 thẻ của mình (admin thấy cả 3);
+  student không còn thấy nút "Quản lý lớp".
+- Dashboard HS: mỗi bài được giao có trạng thái (Chưa bắt đầu / Đang làm
+  x/y / Hoàn thành ✓) tính từ attempts — bài xong tự trừ khỏi danh sách,
+  chuyển xuống mục "Đã hoàn thành". Không cần migration.
+- Nút "Luyện tiếp" mở modal luyện tập NGAY trên dashboard (không chuyển
+  trang): bài đã nộp hiện ✓ + nút Sửa, bài chưa nộp có form ghi âm/nộp
+  inline, nộp xong quay về dashboard.
+- `update_speaking_attempt` (mới): HS sửa attempt của mình; mỗi lần sửa
+  ghi ChangeLog (category 'practice', action 'update') — xem được ở
+  Change History (admin/teacher). HS khác/teacher không sửa được.
+- Fix: modal server-rendered bị backdrop đè do stacking context của
+  `main` (particle canvas) — base.html tự chuyển `.modal` ra `body`.
+- 6 tests mới (PracticeFlowTests).
+- `manage.py check`: no issues.
+- Full suite: **197/197 passed** (Django 5.2.17).
+- Thủ công (headless Chromium): modal mở đúng, nộp bài qua modal →
+  lesson thành "Hoàn thành ✓" và chuyển mục; home của student không
+  còn thẻ teacher; không lỗi JS.
 
 Theo feedback của Hoàng ("bố cục còn hơi đơn điệu").
 - `home`: dải số liệu (học sinh / bài học / lượt luyện nói, số liệu thật),

@@ -31,6 +31,34 @@ def _profile_or_none(user, relation):
         return None
 
 
+def _lesson_progress(student_profile, lesson):
+    """Progress of one student on one lesson, derived from attempts.
+
+    A lesson counts as complete when every active exercise has at least
+    one attempt. No extra status field needed.
+    """
+    exercises = list(
+        lesson.exercises.filter(is_active=True).order_by('order'))
+    total = len(exercises)
+    latest_attempts = {}
+    if exercises:
+        for att in SpeakingAttempt.objects.filter(
+                student=student_profile,
+                exercise__in=exercises).select_related(
+                    'exercise').order_by('-created_at'):
+            latest_attempts.setdefault(att.exercise_id, att)
+    done = len(latest_attempts)
+    return {
+        'lesson': lesson,
+        'exercises': exercises,
+        'total': total,
+        'done': done,
+        'pct': round(done / total * 100) if total else 0,
+        'is_complete': total > 0 and done == total,
+        'latest_attempts': latest_attempts,
+    }
+
+
 @login_required
 def home(request):
     return render(request, 'home.html', {
@@ -78,6 +106,10 @@ def dashboard(request):
             messages.error(request, 'Student profile not found. Please contact an administrator.')
             return redirect('home')
         assigned_lessons = student_profile.assigned_lessons.select_related('lesson').all()
+        progress_list = [_lesson_progress(student_profile, item.lesson)
+                         for item in assigned_lessons]
+        active_lessons = [p for p in progress_list if not p['is_complete']]
+        completed_lessons = [p for p in progress_list if p['is_complete']]
         recent_attempts = SpeakingAttempt.objects.filter(
             student=student_profile).select_related(
                 'exercise__lesson').order_by('-created_at')[:5]
@@ -100,6 +132,9 @@ def dashboard(request):
         return render(request, 'dashboard_student.html', {
             'student': student_profile,
             'assigned_lessons': assigned_lessons,
+            'active_lessons': active_lessons,
+            'completed_lessons': completed_lessons,
+            'modal_lessons': active_lessons + completed_lessons,
             'attempt_count': SpeakingAttempt.objects.filter(
                 student=student_profile).count(),
             'recent_attempts': recent_attempts,
@@ -292,6 +327,8 @@ def create_speaking_attempt(request, lesson_id, exercise_id):
         )
 
         messages.success(request, 'Speaking attempt created successfully!')
+        if request.POST.get('next') == 'dashboard':
+            return redirect('dashboard')
         return redirect('lesson_detail', lesson_id=lesson.id)
 
     context = {
@@ -299,6 +336,64 @@ def create_speaking_attempt(request, lesson_id, exercise_id):
         'lesson': lesson,
     }
     return render(request, 'create_speaking_attempt.html', context)
+
+
+@login_required
+def update_speaking_attempt(request, attempt_id):
+    """Let a student edit their own submitted attempt.
+
+    Every edit is written to the change history (category 'practice',
+    action 'update') so teachers/admins can see it.
+    """
+    user = request.user
+    attempt = get_object_or_404(SpeakingAttempt, id=attempt_id)
+
+    if user.role != 'student':
+        messages.error(request, 'You do not have permission to edit speaking attempts.')
+        return redirect('dashboard')
+
+    student_profile = _profile_or_none(user, 'student_profile')
+    if student_profile is None or attempt.student_id != student_profile.id:
+        messages.error(request, 'You do not have permission to edit this attempt.')
+        return redirect('dashboard')
+
+    lesson = attempt.exercise.lesson
+
+    if request.method == 'POST':
+        audio_file = request.FILES.get('recorded_audio')
+        transcript = request.POST.get('transcript', '').strip()
+        if audio_file and audio_file.size > MAX_AUDIO_UPLOAD_BYTES:
+            messages.error(request, 'The audio file is too large (max 20 MB).')
+            return render(request, 'update_speaking_attempt.html',
+                          {'attempt': attempt, 'lesson': lesson})
+        if not transcript:
+            messages.error(request, 'Transcript is required.')
+            return render(request, 'update_speaking_attempt.html',
+                          {'attempt': attempt, 'lesson': lesson})
+
+        if audio_file:
+            attempt.recorded_audio = audio_file
+        attempt.transcript = transcript
+        attempt.feedback = request.POST.get('feedback', '').strip()
+        attempt.save()
+
+        log_change(
+            actor=user,
+            category='practice',
+            action='update',
+            summary=(f"{user.username} updated attempt for "
+                     f"'{attempt.exercise.title}' ({lesson.title})"),
+            target_user=user,
+            related_student=student_profile,
+        )
+
+        messages.success(request, 'Bài làm đã được cập nhật!')
+        if request.POST.get('next') == 'dashboard':
+            return redirect('dashboard')
+        return redirect('lesson_detail', lesson_id=lesson.id)
+
+    return render(request, 'update_speaking_attempt.html',
+                  {'attempt': attempt, 'lesson': lesson})
 
 
 @login_required
