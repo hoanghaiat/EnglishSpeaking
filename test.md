@@ -22,8 +22,8 @@ Theo feedback của Hoàng ("bố cục còn hơi đơn điệu").
 - 2 tests mới (DashboardRedesignTests).
 - `manage.py check`: no issues.
 - Targeted tests: PermissionMatrix + DashboardEdge (13 tests) OK;
-  DashboardRedesignTests (2 tests) OK. Full suite chưa chạy lại sau batch
-  này (bị gián đoạn) — sẽ chạy bù trước khi push.
+  DashboardRedesignTests (2 tests) OK.
+- Full suite: **191/191 passed** (Django 5.2.17).
 - Thủ công (headless Chromium): cả 2 trang render đúng, không lỗi JS.
 
 Theo mockup Hoàng duyệt (tone xanh dương, thân thiện với THCS).
