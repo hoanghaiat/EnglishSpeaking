@@ -1251,3 +1251,82 @@ class SeedDemoDataTests(TestCase):
         call_command('seed_demo_data')
         self.assertEqual(
             User.objects.filter(username__startswith='demo_').count(), 90)
+
+
+class ManageGroupingTests(TestCase):
+    """Links & Practice lists are grouped (by teacher/student) with
+    natural ordering: 'Class 2' before 'Class 10'."""
+
+    def setUp(self):
+        self.admin = make_user('g_adm', 'admin', is_staff=True, is_superuser=True)
+        self.t1 = make_user('g_tch1', 'teacher')
+        self.t2 = make_user('g_tch2', 'teacher')
+        self.tp1 = TeacherProfile.objects.create(user=self.t1)
+        self.tp2 = TeacherProfile.objects.create(user=self.t2)
+        self.s1 = make_user('g_stu1', 'student')
+        self.s2 = make_user('g_stu2', 'student')
+        self.s10 = make_user('g_stu10', 'student')
+        self.sp1 = StudentProfile.objects.create(user=self.s1)
+        self.sp2 = StudentProfile.objects.create(user=self.s2)
+        self.sp10 = StudentProfile.objects.create(user=self.s10)
+        TeacherStudent.objects.create(teacher=self.tp1, student=self.sp1)
+        TeacherStudent.objects.create(teacher=self.tp1, student=self.sp10)
+        TeacherStudent.objects.create(teacher=self.tp2, student=self.sp2)
+        p1u = make_user('g_par1', 'parent')
+        p1 = ParentProfile.objects.create(user=p1u)
+        StudentParent.objects.create(student=self.sp1, parent=p1,
+                                     relationship_type='Father')
+        p2u = make_user('g_par2', 'parent')
+        p2 = ParentProfile.objects.create(user=p2u)
+        StudentParent.objects.create(student=self.sp2, parent=p2,
+                                     relationship_type='Mother')
+        for name in ('Class 10', 'Class 2', 'Class 1'):
+            StudyClass.objects.create(name=name, teacher=self.tp1)
+        StudyClass.objects.create(name='Class 1', teacher=self.tp2)
+
+    def _get(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('manage_center') + '?tab=links')
+        self.assertEqual(r.status_code, 200)
+        return r.content.decode()
+
+    def test_classes_grouped_by_teacher_natural_order(self):
+        html = self._get()
+        # Teacher sections appear before their classes...
+        t1_pos = html.find('g_tch1')
+        t2_pos = html.find('g_tch2')
+        self.assertGreater(t1_pos, 0)
+        self.assertGreater(t2_pos, t1_pos)
+        # ...and 'Class 2' sorts before 'Class 10' (natural order).
+        c1 = html.find('>Class 1<', t1_pos)
+        c2 = html.find('>Class 2<', t1_pos)
+        c10 = html.find('>Class 10<', t1_pos)
+        self.assertLess(c1, c2)
+        self.assertLess(c2, c10)
+        self.assertLess(c10, t2_pos)
+
+    def test_teacher_students_grouped_by_teacher(self):
+        html = self._get()
+        t1_pos = html.find('id="subpane-teacherstudents"')
+        g1 = html.find('g_tch1', t1_pos)
+        g2 = html.find('g_tch2', t1_pos)
+        self.assertLess(g1, g2)
+        # g_tch1's students follow their teacher header.
+        s1 = html.find('g_stu1', g1)
+        s10 = html.find('g_stu10', g1)
+        self.assertLess(s1, s10)
+        self.assertLess(s10, g2)
+
+    def test_student_parents_grouped_by_student(self):
+        html = self._get()
+        pos = html.find('id="subpane-studentparents"')
+        # Two student groups, natural order: g_stu1 before g_stu2.
+        s1 = html.find('&#127891; g_stu1', pos)
+        s2 = html.find('&#127891; g_stu2', pos)
+        self.assertGreater(s1, 0)
+        self.assertLess(s1, s2)
+        # Each parent sits under their student's header.
+        par1 = html.find('g_par1', s1)
+        par2 = html.find('g_par2', s2)
+        self.assertLess(par1, s2)
+        self.assertGreater(par2, s2)

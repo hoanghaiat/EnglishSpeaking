@@ -12,6 +12,9 @@ from django.db.models import Max, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
+import re
+from itertools import groupby
+
 from .changelog import log_change
 from .forms import (
     AssignLessonsForm,
@@ -96,6 +99,62 @@ def _is_admin(request):
 def _own_students(teacher_profile):
     return StudentProfile.objects.filter(
         assigned_teachers__teacher=teacher_profile).distinct()
+
+
+def _natural_key(value):
+    """Sort key that orders 'Class 2' before 'Class 10' (human-friendly)."""
+    return [int(part) if part.isdigit() else part.lower()
+            for part in re.split(r'(\d+)', value or '')]
+
+
+def _group_teacher_students(links):
+    """Group TeacherStudent links by teacher.
+
+    Returns [(teacher_user, [link, ...]), ...] sorted naturally by teacher
+    username, then student username.
+    """
+    ordered = sorted(links, key=lambda l: (
+        _natural_key(l.teacher.user.username),
+        _natural_key(l.student.user.username)))
+    groups = []
+    for _, g in groupby(ordered,
+                        key=lambda l: l.teacher.user.username.lower()):
+        items = list(g)
+        groups.append((items[0].teacher.user, items))
+    return groups
+
+
+def _group_student_parents(links):
+    """Group StudentParent links by student.
+
+    Returns [(student_user, [link, ...]), ...] sorted naturally by student
+    username, then parent username.
+    """
+    ordered = sorted(links, key=lambda l: (
+        _natural_key(l.student.user.username),
+        _natural_key(l.parent.user.username)))
+    groups = []
+    for _, g in groupby(ordered,
+                        key=lambda l: l.student.user.username.lower()):
+        items = list(g)
+        groups.append((items[0].student.user, items))
+    return groups
+
+
+def _group_classes(classes):
+    """Group StudyClass objects by teacher.
+
+    Returns [(teacher_user, [study_class, ...]), ...] sorted naturally by
+    teacher username, then class name.
+    """
+    ordered = sorted(classes, key=lambda c: (
+        _natural_key(c.teacher.user.username), _natural_key(c.name)))
+    groups = []
+    for _, g in groupby(ordered,
+                        key=lambda c: c.teacher.user.username.lower()):
+        items = list(g)
+        groups.append((items[0].teacher.user, items))
+    return groups
 
 
 # Generic-CRUD models a teacher may touch (always scoped to own students).
@@ -410,13 +469,13 @@ def management_center(request):
             Q(student__user__username__icontains=q_links)
             | Q(exercise__title__icontains=q_links))
     context.update(
-        teacher_students=teacher_students[:200],
-        student_parents=student_parents[:200],
+        ts_groups=_group_teacher_students(teacher_students[:200]),
+        sp_groups=_group_student_parents(student_parents[:200]),
         student_lessons=student_lessons[:200],
         recent_attempts=recent_attempts[:50],
     )
 
-    # ---- Classes ----
+    # ---- Classes, grouped by teacher with natural name order ----
     if is_admin:
         classes = StudyClass.objects.select_related(
             'teacher__user').prefetch_related('students__user')
@@ -427,7 +486,7 @@ def management_center(request):
         classes = classes.filter(
             Q(name__icontains=q_class)
             | Q(teacher__user__username__icontains=q_class))
-    context['study_classes'] = classes.order_by('name')
+    context['class_groups'] = _group_classes(classes)
 
     # ---- Speaking Lessons (admin) ----
     if is_admin:

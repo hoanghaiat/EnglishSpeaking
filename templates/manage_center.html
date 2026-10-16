@@ -166,8 +166,13 @@
                 <p class="text-muted small mb-0 mt-1">{% if is_admin %}Study classes created by teachers.{% else %}Group your students into named classes (e.g. 7/13) to assign lessons to everyone at once.{% endif %}</p>
             </div>
             <div class="card-body">
-                <div class="row g-3">
-                    {% for class in study_classes %}
+                {% for teacher_user, classes in class_groups %}
+                <div{% if not forloop.last %} class="mb-4"{% endif %}>
+                    {% if class_groups|length > 1 %}
+                    <h6 class="text-muted mb-2">&#128100; {{ teacher_user.username }}</h6>
+                    {% endif %}
+                    <div class="row g-3">
+                    {% for class in classes %}
                     <div class="col-lg-6">
                         <div class="card h-100">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -197,10 +202,12 @@
                             </div>
                         </div>
                     </div>
-                    {% empty %}
-                    <div class="col-12"><p class="text-muted mb-0">No classes found. <a data-esp-modal href="{% url 'class_add' %}">Create the first one</a>.</p></div>
                     {% endfor %}
+                    </div>
                 </div>
+                {% empty %}
+                <p class="text-muted mb-0">No classes found. <a data-esp-modal href="{% url 'class_add' %}">Create the first one</a>.</p>
+                {% endfor %}
             </div>
         </div>
 
@@ -214,18 +221,27 @@
                         <a data-esp-modal href="{% url 'manage_add' model_name='teacherstudent' %}" class="btn btn-sm btn-primary">&#10133; Link</a>
                         {% endif %}
                     </div>
-                    <ul class="list-group list-group-flush">
-                        {% for link in teacher_students %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>{{ link.teacher.user.username }} &rarr; {{ link.student.user.username }}</span>
-                            {% if is_admin %}
-                            <a data-esp-modal href="{% url 'manage_delete' model_name='teacherstudent' pk=link.pk %}" class="btn btn-sm btn-outline-danger">&#128465;</a>
+                    <div class="card-body">
+                    {% for teacher_user, links in ts_groups %}
+                        <div{% if not forloop.last %} class="mb-3"{% endif %}>
+                            {% if ts_groups|length > 1 %}
+                            <h6 class="mb-1">&#128100; {{ teacher_user.username }} <span class="text-muted small fw-normal">({{ links|length }} student{{ links|length|pluralize }})</span></h6>
                             {% endif %}
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-muted">No links found.</li>
-                        {% endfor %}
-                    </ul>
+                            <ul class="list-group list-group-flush border rounded">
+                                {% for link in links %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <span>{{ link.student.user.username }}</span>
+                                    {% if is_admin %}
+                                    <a data-esp-modal href="{% url 'manage_delete' model_name='teacherstudent' pk=link.pk %}" class="btn btn-sm btn-outline-danger">&#128465;</a>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted mb-0">No links found.</p>
+                    {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -235,16 +251,25 @@
                     <h5 class="mb-0">&#128106; Student &ndash; Parents</h5>
                         <a data-esp-modal href="{% url 'manage_add' model_name='studentparent' %}" class="btn btn-sm btn-primary">&#10133; Link</a>
                     </div>
-                    <ul class="list-group list-group-flush">
-                        {% for link in student_parents %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>{{ link.student.user.username }} &harr; {{ link.parent.user.username }}{% if link.relationship_type %} <small class="text-muted">({{ link.relationship_type }})</small>{% endif %}</span>
-                            <a data-esp-modal href="{% url 'manage_delete' model_name='studentparent' pk=link.pk %}" class="btn btn-sm btn-outline-danger">&#128465;</a>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-muted">No links found.</li>
-                        {% endfor %}
-                    </ul>
+                    <div class="card-body">
+                    {% for student_user, links in sp_groups %}
+                        <div{% if not forloop.last %} class="mb-3"{% endif %}>
+                            {% if sp_groups|length > 1 %}
+                            <h6 class="mb-1">&#127891; {{ student_user.username }} <span class="text-muted small fw-normal">({{ links|length }} parent{{ links|length|pluralize }})</span></h6>
+                            {% endif %}
+                            <ul class="list-group list-group-flush border rounded">
+                                {% for link in links %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <span>{{ link.parent.user.username }}{% if link.relationship_type %} <small class="text-muted">({{ link.relationship_type }})</small>{% endif %}</span>
+                                    <a data-esp-modal href="{% url 'manage_delete' model_name='studentparent' pk=link.pk %}" class="btn btn-sm btn-outline-danger">&#128465;</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted mb-0">No links found.</p>
+                    {% endfor %}
+                    </div>
                 </div>
             </div>
 

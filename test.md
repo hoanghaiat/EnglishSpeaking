@@ -10,6 +10,23 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
+## <next> — Group Links & Practice theo teacher/student + natural sort (2026-10-16)
+
+Theo feedback của Hoàng (screenshot): list Classes/Teacher–Students/
+Student–Parents sắp xếp lộn xộn (sort string "Class 1, Class 10, Class 2";
+2 list kia sort mới-nhất-trước).
+- Classes: gom nhóm theo teacher (mỗi teacher một section), class sort tên
+  tự nhiên (Class 1, 2, …, 10).
+- Teacher–Students: gom theo teacher, student sort tự nhiên, hiện số lượng.
+- Student–Parents: gom theo student, parent sort tự nhiên, hiện số lượng.
+- Header nhóm ẩn khi chỉ có 1 nhóm (view của teacher) cho gọn.
+- Filter q_links/q_class vẫn hoạt động trên tập đã lọc rồi mới gom nhóm.
+- 3 tests mới (ManageGroupingTests): natural order, group đúng teacher/student.
+- `manage.py check`: no issues.
+- Full suite: **189/189 passed** (Django 5.2.17).
+- `test_manage`: **114/114 passed** (Django 4.x).
+- Thủ công (headless Chromium): cả 3 section render gọn, đúng nhóm, không lỗi JS.
+
 ## d940829 — Toast top-center, student dropdown, seed demo data (2026-10-14)
 
 Theo feedback của Hoàng trên screenshot:
