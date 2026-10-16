@@ -25,22 +25,24 @@
                 <input type="hidden" name="next" value="dashboard">
 
                 <div class="mb-3">
-                    <label for="recorded_audio" class="form-label"><strong>&#127908; Bản ghi mới</strong> <span class="text-muted">(để trống nếu giữ bản cũ{% if attempt.recorded_audio %} — đã có file{% endif %})</span></label>
+                    <label for="recorded_audio" class="form-label"><strong>&#127908; Bản ghi âm</strong> <span class="text-muted">(để trống nếu giữ bản cũ{% if attempt.recorded_audio %} — đã có file{% endif %})</span></label>
                     <input type="file" class="form-control" id="recorded_audio" name="recorded_audio" accept="audio/*">
+                    <div class="form-text">Mẹo: tìm chỗ yên tĩnh và nói với tốc độ tự nhiên.</div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="transcript" class="form-label"><strong>&#9999; What you said</strong></label>
-                    <textarea class="form-control" id="transcript" name="transcript" rows="5" required>{{ attempt.transcript }}</textarea>
+                    <label for="transcript" class="form-label"><strong>&#9999; Những gì bạn đã nói</strong></label>
+                    <textarea class="form-control" id="transcript" name="transcript" rows="5" required placeholder="Nhập câu tiếng Anh bạn đã nói...">{{ attempt.transcript }}</textarea>
                 </div>
 
                 <div class="mb-3">
-                    <label for="feedback" class="form-label"><strong>&#128172; Notes for your teacher</strong> <span class="text-muted">(optional)</span></label>
-                    <textarea class="form-control" id="feedback" name="feedback" rows="3">{{ attempt.feedback|default:'' }}</textarea>
+                    <label for="feedback" class="form-label"><strong>&#128172; Ghi chú cho giáo viên</strong> <span class="text-muted">(không bắt buộc)</span></label>
+                    <textarea class="form-control" id="feedback" name="feedback" rows="3" placeholder="Từ nào bạn thấy khó? Bạn muốn được giúp gì?">{{ attempt.feedback|default:'' }}</textarea>
                 </div>
 
                 <button type="submit" class="esp-btn esp-btn-warm">&#10003; Lưu thay đổi</button>
                 <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Hủy</a>
+                <small class="text-muted ms-2">Mỗi lần sửa đều được ghi vào lịch sử.</small>
             </form>
         </div>
     </div>
