@@ -9,12 +9,7 @@
         <div class="col-lg-7">
             <h1 class="display-5">Speak English<br>with Confidence</h1>
             <p class="lead mt-3 mb-4">Luyện nói tiếng Anh mỗi ngày với các bài học được xây dựng bài bản, ghi âm và theo dõi tiến độ của bạn.</p>
-            {% if not user.is_authenticated %}
-                <a href="{% url 'signup' %}" class="esp-btn esp-btn-primary me-2">Bắt đầu luyện tập &#8594;</a>
-                <a href="{% url 'login' %}" class="esp-btn esp-btn-light">Đăng nhập</a>
-            {% else %}
-                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary">Vào Dashboard của tôi &#8594;</a>
-            {% endif %}
+            <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary">Vào Dashboard của tôi &#8594;</a>
         </div>
         <div class="col-lg-5 text-center">
             <img src="{% static 'img/hero-speaking.webp' %}" alt="Học sinh luyện nói tiếng Anh" class="esp-hero-illus">
