@@ -10,7 +10,29 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Group Links & Practice theo teacher/student + natural sort (2026-10-16)
+## <next> — Redesign UI batch 1: design system + trang chủ + dashboard học sinh (2026-10-16)
+
+Theo mockup Hoàng duyệt (tone xanh dương, thân thiện với THCS).
+- `static/css/esp-theme.css` mới: design system (màu brand, font Nunito,
+  button pill, card, stat card màu, pill trạng thái, table, toast).
+- `base.html`: gắn font Nunito + theme CSS; navbar có user chip
+  (avatar + tên + role); footer navy theo mockup.
+- `home.html`: hero "Speak English with Confidence" + ảnh minh họa AI
+  (`static/img/hero-speaking.webp`), 3 feature card, How it works.
+- `dashboard_student.html`: hero gradient chào học sinh, 3 stat card màu
+  (bài được giao / lượt luyện tập / gần đây), panel "Luyện tiếp",
+  danh sách bài + lần luyện gần đây.
+- `views.dashboard` (student): thêm `attempt_count`, `recent_attempts`.
+- Test toast cập nhật: CSS toast chuyển vào file theme.
+- `manage.py check`: no issues.
+- Full suite: **189/189 passed** (Django 5.2.17).
+- `test_manage` + `test_functional`: **172/172 passed** (Django 4.x).
+- Thủ công (headless Chromium): trang chủ + dashboard render đúng,
+  không lỗi JS. Lưu ý: `home` hiện có `@login_required` nên trang
+  landing chỉ hiện sau khi đăng nhập — cần Hoàng quyết định có mở
+  public không.
+
+## 3dbf1e4 — Group Links & Practice theo teacher/student + natural sort (2026-10-16)
 
 Theo feedback của Hoàng (screenshot): list Classes/Teacher–Students/
 Student–Parents sắp xếp lộn xộn (sort string "Class 1, Class 10, Class 2";

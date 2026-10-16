@@ -3,38 +3,102 @@
 {% block title %}My Speaking Practice{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2>&#127908; My Speaking Practice</h2>
-        <p class="text-muted">Welcome back, {{ user.username }}! Pick a lesson and keep your speaking streak going.</p>
+<div class="esp-dash-hero p-4 p-lg-5 mb-4">
+    <div class="row align-items-center position-relative" style="z-index:1;">
+        <div class="col-lg-8">
+            <h2 class="mb-2">Chào buổi chiều, {{ user.username }}! &#128075;</h2>
+            <p class="mb-3" style="color:#cdd9f5;">Chọn một bài học và giữ vững phong độ luyện nói mỗi ngày nhé.</p>
+            <span class="esp-streak-pill">&#128293; {{ attempt_count }} lượt luyện tập</span>
+        </div>
+        <div class="col-lg-4 text-center d-none d-lg-block" style="font-size:4.5rem;" aria-hidden="true">&#128266;</div>
+    </div>
+</div>
 
-        <div class="row mt-4 g-4">
-            <div class="col-md-6">
-                <div class="card esp-card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">&#128218; My Assigned Lessons</h5>
-                        {% if assigned_lessons %}
-                            <div class="list-group list-group-flush">
-                                {% for item in assigned_lessons %}
-                                    <a href="{% url 'lesson_detail' item.lesson.id %}" class="list-group-item list-group-item-action">
-                                        <h6 class="mb-1">{{ item.lesson.title }}</h6>
-                                        <small class="text-muted">{{ item.lesson.chapter.course.title }} &rsaquo; {{ item.lesson.chapter.title }}</small>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="text-muted mb-0">No lessons assigned yet. Ask your teacher to assign speaking lessons to you.</p>
-                        {% endif %}
-                    </div>
-                </div>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card esp-stat-card esp-stat-blue h-100">
+            <div class="card-body">
+                <div class="k">Bài được giao</div>
+                <div class="v">{{ assigned_lessons|length }}</div>
+                <div class="d">từ giáo viên của bạn</div>
+                <div class="bg-ico">&#128218;</div>
             </div>
-            <div class="col-md-6">
-                <div class="card esp-card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">&#128202; My Speaking Progress</h5>
-                        <p class="text-muted mb-0">Your practice history and speaking streak will appear here. Every recording counts!</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-stat-card esp-stat-warm h-100">
+            <div class="card-body">
+                <div class="k">Lượt luyện tập</div>
+                <div class="v">{{ attempt_count }}</div>
+                <div class="d">mỗi bản ghi đều đáng giá</div>
+                <div class="bg-ico">&#127908;</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-stat-card esp-stat-green h-100">
+            <div class="card-body">
+                <div class="k">Bài đã thử gần đây</div>
+                <div class="v">{{ recent_attempts|length }}</div>
+                <div class="d">trong 5 lần gần nhất</div>
+                <div class="bg-ico">&#9989;</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card esp-card h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">&#128218; Bài học của tôi</h5>
+                {% if assigned_lessons %}
+                    {% with first=assigned_lessons.0 %}
+                    <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded" style="background:var(--esp-sky-soft);border:1px solid var(--esp-line);">
+                        <div class="esp-icon-tile esp-tile-amber">&#127919;</div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Tiếp tục: {{ first.lesson.title }}</h6>
+                            <small class="text-muted">{{ first.lesson.chapter.course.title }} &rsaquo; {{ first.lesson.chapter.title }}</small>
+                        </div>
+                        <a href="{% url 'lesson_detail' first.lesson.id %}" class="esp-btn esp-btn-warm" style="padding:.55rem 1.3rem;font-size:.9rem;">Luyện tiếp &#8594;</a>
                     </div>
-                </div>
+                    {% endwith %}
+                    <div>
+                        {% for item in assigned_lessons %}
+                        <a href="{% url 'lesson_detail' item.lesson.id %}" class="esp-lesson-row">
+                            <div class="esp-icon-tile esp-tile-blue" style="width:44px;height:44px;font-size:1.3rem;">&#128483;</div>
+                            <div class="flex-grow-1">
+                                <h6>{{ item.lesson.title }}</h6>
+                                <small class="text-muted">{{ item.lesson.chapter.course.title }} &rsaquo; {{ item.lesson.chapter.title }}</small>
+                            </div>
+                            <span style="color:var(--esp-primary);font-weight:900;">&#8594;</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Chưa có bài nào được giao. Nhờ giáo viên giao bài luyện nói cho bạn nhé!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card esp-card h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">&#128202; Lần luyện gần đây</h5>
+                {% if recent_attempts %}
+                    {% for att in recent_attempts %}
+                    <div class="d-flex align-items-center gap-3 py-2" style="border-bottom:1px solid #eef3fb;">
+                        <div class="esp-icon-tile esp-tile-green" style="width:44px;height:44px;font-size:1.3rem;">&#127908;</div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-0" style="font-size:.95rem;">{{ att.exercise.lesson.title }}</h6>
+                            <small class="text-muted">{{ att.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% if att.total_score %}<span class="esp-pill esp-pill-green">{{ att.total_score|floatformat:0 }} điểm</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">Chưa có bản ghi nào. Mỗi lần luyện tập đều giúp bạn tiến bộ!</p>
+                {% endif %}
             </div>
         </div>
     </div>

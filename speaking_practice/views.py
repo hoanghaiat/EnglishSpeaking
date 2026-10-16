@@ -72,7 +72,16 @@ def dashboard(request):
             messages.error(request, 'Student profile not found. Please contact an administrator.')
             return redirect('home')
         assigned_lessons = student_profile.assigned_lessons.select_related('lesson').all()
-        return render(request, 'dashboard_student.html', {'student': student_profile, 'assigned_lessons': assigned_lessons})
+        recent_attempts = SpeakingAttempt.objects.filter(
+            student=student_profile).select_related(
+                'exercise__lesson').order_by('-created_at')[:5]
+        return render(request, 'dashboard_student.html', {
+            'student': student_profile,
+            'assigned_lessons': assigned_lessons,
+            'attempt_count': SpeakingAttempt.objects.filter(
+                student=student_profile).count(),
+            'recent_attempts': recent_attempts,
+        })
 
     elif user.role == 'parent':
         parent_profile = _profile_or_none(user, 'parent_profile')

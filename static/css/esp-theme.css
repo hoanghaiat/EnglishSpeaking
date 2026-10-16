@@ -1,0 +1,242 @@
+/* ============================================================
+   ESP design system — extracted from the approved UI mockup.
+   Friendly blue theme for teachers / parents / secondary students.
+   ============================================================ */
+:root {
+    /* Brand */
+    --esp-primary: #1d64d8;
+    --esp-primary-dark: #154fae;
+    --esp-primary-deep: #0e3a8a;
+    --esp-navy: #0a2563;
+    --esp-sky: #e9f2fe;
+    --esp-sky-soft: #f4f8ff;
+    --esp-ink: #17233b;
+    --esp-muted: #5b6b8c;
+    --esp-line: #dbe6f7;
+    /* Warm accent for motivation (streaks, CTAs, highlights) */
+    --esp-amber: #f59e0b;
+    --esp-amber-soft: #fef3c7;
+    /* Status */
+    --esp-green: #16a34a;
+    --esp-green-soft: #dcfce7;
+    --esp-cyan: #0891b2;
+    --esp-cyan-soft: #cffafe;
+    --esp-purple: #7c3aed;
+    --esp-purple-soft: #ede9fe;
+    --esp-red: #dc2626;
+    --esp-red-soft: #fee2e2;
+    /* Shape */
+    --esp-radius: 1rem;
+    --esp-radius-lg: 1.4rem;
+    --esp-shadow: 0 .35rem 1rem rgba(23, 35, 59, .08);
+    --esp-shadow-lg: 0 .8rem 2rem rgba(29, 100, 216, .16);
+}
+
+body {
+    font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--esp-sky-soft);
+    color: var(--esp-ink);
+}
+
+/* ---------- Navbar ---------- */
+.esp-navbar {
+    background: linear-gradient(90deg, var(--esp-primary-deep), var(--esp-primary) 60%, #2f7de9);
+}
+.esp-brand { font-weight: 800; letter-spacing: .2px; }
+.navbar-dark .navbar-nav .nav-link { color: rgba(255, 255, 255, .88); font-weight: 700; }
+.navbar-dark .navbar-nav .nav-link:hover { color: #fff; }
+.esp-user-chip {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .35);
+    color: #fff; border-radius: 999px; padding: .28rem .8rem .28rem .3rem;
+    font-weight: 800; font-size: .85rem; text-decoration: none;
+}
+.esp-user-chip:hover { color: #fff; background: rgba(255, 255, 255, .24); }
+.esp-user-chip .ava {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #fff; color: var(--esp-primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: .8rem;
+}
+
+/* ---------- Buttons ---------- */
+.esp-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-weight: 800; border-radius: 999px; border: 0;
+    padding: .7rem 1.7rem; text-decoration: none; cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.esp-btn:hover { transform: translateY(-1px); }
+.esp-btn-primary {
+    background: linear-gradient(135deg, var(--esp-primary), #3b82f6);
+    color: #fff; box-shadow: 0 .5rem 1.2rem rgba(29, 100, 216, .35);
+}
+.esp-btn-primary:hover { color: #fff; box-shadow: 0 .7rem 1.5rem rgba(29, 100, 216, .45); }
+.esp-btn-warm {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff; box-shadow: 0 .5rem 1.2rem rgba(245, 158, 11, .35);
+}
+.esp-btn-warm:hover { color: #fff; }
+.esp-btn-light { background: #fff; color: var(--esp-primary); box-shadow: var(--esp-shadow); }
+.esp-btn-light:hover { color: var(--esp-primary-dark); }
+.esp-btn-outline-light {
+    border: 2px solid rgba(255, 255, 255, .7); color: #fff; background: transparent;
+}
+.esp-btn-outline-light:hover { color: #fff; background: rgba(255, 255, 255, .14); }
+
+/* ---------- Cards ---------- */
+.esp-card {
+    border: 1px solid var(--esp-line);
+    border-radius: var(--esp-radius-lg);
+    box-shadow: var(--esp-shadow);
+    background: #fff;
+}
+.esp-card-hover { transition: transform .15s ease, box-shadow .15s ease; }
+.esp-card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--esp-shadow-lg);
+}
+.esp-icon-tile {
+    width: 56px; height: 56px; border-radius: 1rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; flex-shrink: 0;
+}
+.esp-tile-blue { background: var(--esp-sky); }
+.esp-tile-green { background: var(--esp-green-soft); }
+.esp-tile-amber { background: var(--esp-amber-soft); }
+.esp-tile-purple { background: var(--esp-purple-soft); }
+.esp-tile-cyan { background: var(--esp-cyan-soft); }
+
+/* ---------- Stat cards (colored, like the mockup dashboard) ---------- */
+.esp-stat-card {
+    border: 0; border-radius: var(--esp-radius-lg); color: #fff;
+    box-shadow: var(--esp-shadow);
+    position: relative; overflow: hidden;
+}
+.esp-stat-card .card-body { padding: 1.25rem 1.4rem; }
+.esp-stat-card .k { font-size: .78rem; font-weight: 700; opacity: .92; }
+.esp-stat-card .v { font-size: 2.1rem; font-weight: 900; line-height: 1.15; }
+.esp-stat-card .d { font-size: .75rem; font-weight: 700; opacity: .85; }
+.esp-stat-card .bg-ico {
+    position: absolute; right: .6rem; bottom: .2rem;
+    font-size: 3.2rem; opacity: .22;
+}
+.esp-stat-blue { background: linear-gradient(135deg, #1d64d8, #3b82f6); }
+.esp-stat-green { background: linear-gradient(135deg, #16a34a, #4ade80); }
+.esp-stat-cyan { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+.esp-stat-amber { background: linear-gradient(135deg, #d97706, #fbbf24); }
+.esp-stat-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.esp-stat-warm { background: linear-gradient(135deg, #f59e0b, #fb7185); }
+
+/* ---------- Pills / badges ---------- */
+.esp-pill {
+    display: inline-block; font-size: .72rem; font-weight: 800;
+    padding: .22rem .7rem; border-radius: 999px; letter-spacing: .02em;
+}
+.esp-pill-green { background: var(--esp-green-soft); color: #15803d; }
+.esp-pill-amber { background: var(--esp-amber-soft); color: #b45309; }
+.esp-pill-blue { background: var(--esp-sky); color: var(--esp-primary-dark); }
+.esp-pill-purple { background: var(--esp-purple-soft); color: #6d28d9; }
+.esp-pill-red { background: var(--esp-red-soft); color: #b91c1c; }
+.esp-pill-gray { background: #f1f5f9; color: #64748b; }
+
+/* ---------- Landing hero ---------- */
+.esp-hero-landing {
+    background: linear-gradient(120deg, #f4f8ff 0%, #e3efff 55%, #d6e7ff 100%);
+    border-radius: 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--esp-line);
+}
+.esp-hero-landing h1 {
+    color: var(--esp-primary-deep);
+    font-weight: 900; letter-spacing: -.02em;
+}
+.esp-hero-landing .lead { color: var(--esp-muted); font-weight: 600; }
+.esp-hero-illus {
+    width: 100%; max-height: 340px; object-fit: cover; object-position: top;
+    height: auto; border-radius: 1.2rem;
+    box-shadow: var(--esp-shadow-lg);
+}
+.esp-speech-bubble {
+    display: inline-block; background: #fff; border: 2px solid var(--esp-line);
+    color: var(--esp-primary); font-weight: 900; border-radius: 1.2rem;
+    padding: .9rem 1.3rem; box-shadow: var(--esp-shadow);
+    font-size: 1.05rem; line-height: 1.35;
+}
+.esp-how-card { background: var(--esp-sky); border: 1px solid var(--esp-line); }
+
+/* ---------- Student dashboard ---------- */
+.esp-dash-hero {
+    background: linear-gradient(120deg, var(--esp-primary-deep), var(--esp-primary) 55%, #2f7de9);
+    border-radius: 1.6rem; color: #fff;
+    box-shadow: var(--esp-shadow-lg);
+    overflow: hidden; position: relative;
+}
+.esp-dash-hero::after {
+    content: ''; position: absolute; top: -70px; right: -70px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, .35), transparent 70%);
+}
+.esp-dash-hero h2 { font-weight: 900; letter-spacing: -.01em; }
+.esp-streak-pill {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: rgba(245, 158, 11, .18);
+    border: 1.5px solid rgba(245, 158, 11, .65);
+    color: #fde68a; font-weight: 800; border-radius: 999px;
+    padding: .35rem 1rem; font-size: .9rem;
+}
+.esp-progress { height: .65rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.esp-progress > i {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--esp-amber), #f97316);
+}
+.esp-progress-blue > i { background: linear-gradient(90deg, var(--esp-primary), #3b82f6); }
+.esp-lesson-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: .9rem .4rem; border-bottom: 1px solid #eef3fb;
+    text-decoration: none; color: inherit; border-radius: .6rem;
+}
+.esp-lesson-row:last-child { border-bottom: 0; }
+a.esp-lesson-row:hover { background: var(--esp-sky-soft); }
+.esp-lesson-row h6 { font-weight: 800; margin-bottom: .15rem; }
+
+/* ---------- Tables (management style) ---------- */
+.esp-table { background: #fff; border-radius: var(--esp-radius); overflow: hidden; }
+.esp-table thead th {
+    background: var(--esp-sky-soft); color: var(--esp-muted);
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid var(--esp-line); font-weight: 800;
+}
+.esp-table tbody td { vertical-align: middle; }
+
+/* ---------- Footer ---------- */
+.esp-footer { background: var(--esp-navy); color: #bcd0f5; }
+.esp-footer a { color: #e6efff; text-decoration: none; }
+.esp-footer a:hover { text-decoration: underline; }
+.esp-footer .tagline { color: #8ea6d8; }
+
+/* Legacy aliases (dashboards not redesigned yet) */
+.esp-stat { font-size: 2rem; font-weight: 800; color: var(--esp-primary-dark); }
+.esp-hero {
+    background: linear-gradient(135deg, var(--esp-primary-deep), var(--esp-primary) 60%, #2f7de9);
+    color: #fff; border-radius: 1.4rem;
+}
+
+/* ---------- Toasts (kept from previous batch, restyled to theme) ---------- */
+.esp-toasts {
+    position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+    z-index: 2100;
+    display: flex; flex-direction: column; gap: 10px; align-items: center;
+    width: fit-content; max-width: min(480px, calc(100vw - 40px));
+}
+.esp-toast {
+    margin: 0; border-radius: 12px; border: 0;
+    padding: 12px 44px 12px 16px; width: 100%; text-align: left;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
+    font-weight: 600;
+}
+.esp-toast.alert-success { background: #dcfce7; color: #166534; border-left: 4px solid #22c55e; }
+.esp-toast.alert-info { background: #e0f2fe; color: #0c4a6e; border-left: 4px solid #06b6d4; }
+.esp-toast.alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+.esp-toast.alert-danger, .esp-toast.alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }

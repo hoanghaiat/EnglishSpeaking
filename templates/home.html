@@ -1,62 +1,76 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Speak English with Confidence{% endblock %}
 
 {% block content %}
-<div class="esp-hero p-5 mb-5">
-    <div class="row align-items-center">
-        <div class="col-lg-8">
-            <h1 class="display-5 fw-bold">Speak English with Confidence</h1>
-            <p class="lead mb-4">Practice speaking every day with structured lessons, record your voice, and watch your fluency grow &mdash; one sentence at a time.</p>
+<div class="esp-hero-landing p-4 p-lg-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <h1 class="display-5">Speak English<br>with Confidence</h1>
+            <p class="lead mt-3 mb-4">Luyện nói tiếng Anh mỗi ngày với các bài học được xây dựng bài bản, ghi âm và theo dõi tiến độ của bạn.</p>
             {% if not user.is_authenticated %}
-                <a href="{% url 'signup' %}" class="btn btn-light btn-lg me-2">Start Speaking Free</a>
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Log in</a>
+                <a href="{% url 'signup' %}" class="esp-btn esp-btn-primary me-2">Bắt đầu luyện tập &#8594;</a>
+                <a href="{% url 'login' %}" class="esp-btn esp-btn-light">Đăng nhập</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary">Vào Dashboard của tôi &#8594;</a>
             {% endif %}
         </div>
-        <div class="col-lg-4 text-center d-none d-lg-block" style="font-size: 6rem;" aria-hidden="true">&#127908;</div>
+        <div class="col-lg-5 text-center">
+            <img src="{% static 'img/hero-speaking.webp' %}" alt="Học sinh luyện nói tiếng Anh" class="esp-hero-illus">
+            <div class="mt-3"><span class="esp-speech-bubble">Better English,<br>Brighter Future</span></div>
+        </div>
     </div>
 </div>
 
 <div class="row g-4 mb-5">
     <div class="col-md-4">
         <div class="card esp-card esp-card-hover h-100">
-            <div class="card-body text-center p-4">
-                <div style="font-size: 2.5rem;" aria-hidden="true">&#128483;</div>
-                <h5 class="card-title mt-2">Daily Speaking Practice</h5>
-                <p class="card-text text-muted">Record yourself speaking, write down what you said, and build a daily habit.</p>
+            <div class="card-body p-4">
+                <div class="esp-icon-tile esp-tile-blue mb-3">&#127908;</div>
+                <h5 class="fw-bold">Luyện nói mọi lúc, mọi nơi</h5>
+                <p class="text-muted mb-0">Chỉ cần một chiếc máy tính hoặc điện thoại có internet.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card esp-card esp-card-hover h-100">
-            <div class="card-body text-center p-4">
-                <div style="font-size: 2.5rem;" aria-hidden="true">&#128218;</div>
-                <h5 class="card-title mt-2">Structured Lessons</h5>
-                <p class="card-text text-muted">Follow courses, chapters, and lessons designed by your teacher &mdash; step by step.</p>
+            <div class="card-body p-4">
+                <div class="esp-icon-tile esp-tile-green mb-3">&#128218;</div>
+                <h5 class="fw-bold">Bài học phong phú</h5>
+                <p class="text-muted mb-0">Nhiều chủ đề, cấp độ phù hợp với học sinh THCS.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card esp-card esp-card-hover h-100">
-            <div class="card-body text-center p-4">
-                <div style="font-size: 2.5rem;" aria-hidden="true">&#128202;</div>
-                <h5 class="card-title mt-2">Track Your Progress</h5>
-                <p class="card-text text-muted">Students, teachers, and parents each get a clear view of speaking progress.</p>
+            <div class="card-body p-4">
+                <div class="esp-icon-tile esp-tile-amber mb-3">&#128202;</div>
+                <h5 class="fw-bold">Theo dõi tiến độ</h5>
+                <p class="text-muted mb-0">Xem kết quả, cải thiện kỹ năng từng ngày.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card esp-card">
-            <div class="card-body p-4">
-                <h4 class="card-title">How it works</h4>
-                <ol class="mb-0">
-                    <li class="mb-2"><strong>Learn:</strong> open a lesson and read the speaking prompt &mdash; <em>say it out loud</em>.</li>
-                    <li class="mb-2"><strong>Record:</strong> record your voice and write down what you said.</li>
-                    <li><strong>Improve:</strong> review your attempts and keep practicing a little every day.</li>
-                </ol>
+<div class="row mb-4">
+    <div class="col-lg-10 mx-auto">
+        <div class="card esp-card esp-how-card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <h4 class="fw-bold mb-3">&#128161; How it works</h4>
+                        <ol class="mb-0">
+                            <li class="mb-2"><strong>Learn:</strong> Mở bài học và đọc theo prompt có sẵn &mdash; <em>say it out loud</em>.</li>
+                            <li class="mb-2"><strong>Record:</strong> Ghi âm lại giọng nói của bạn.</li>
+                            <li><strong>Improve:</strong> Xem lại kết quả và luyện tập mỗi ngày.</li>
+                        </ol>
+                    </div>
+                    <div class="col-lg-4 text-center">
+                        <div style="font-size:3.2rem;" aria-hidden="true">&#127919;</div>
+                        <p class="fw-bold mb-0" style="color:var(--esp-primary);"><em>You can<br>do it!</em></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

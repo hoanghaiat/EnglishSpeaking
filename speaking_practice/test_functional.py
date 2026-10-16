@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from django.conf import settings
+import os
 
 from .models import (
     Chapter, Course, Exercise, Lesson, ParentProfile, SpeakingAttempt,
@@ -531,4 +533,9 @@ class ToastPositionTests(WorldTestCase):
     def test_toasts_are_top_centered(self):
         self.login('w_student1')
         r = self.client.get(reverse('dashboard'))
-        self.assertContains(r, 'top: 76px; left: 50%; transform: translateX(-50%)')
+        # Toast styling now lives in the theme stylesheet.
+        self.assertContains(r, 'css/esp-theme.css')
+        css = open(os.path.join(settings.BASE_DIR, 'static', 'css',
+                                'esp-theme.css')).read()
+        self.assertIn('top: 76px', css)
+        self.assertIn('translateX(-50%)', css)
