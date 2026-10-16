@@ -166,6 +166,21 @@ body {
 }
 .esp-how-card { background: var(--esp-sky); border: 1px solid var(--esp-line); }
 
+/* ---------- Landing: stats band ---------- */
+.esp-stats-band {
+    background: linear-gradient(120deg, var(--esp-primary-deep), var(--esp-primary) 60%, #2f7de9);
+    border-radius: 1.6rem; padding: 2.2rem 1rem;
+    box-shadow: var(--esp-shadow-lg); color: #fff;
+}
+.esp-stats-band-num { font-size: 2.6rem; font-weight: 900; line-height: 1.1; }
+.esp-stats-band-label { font-weight: 700; color: #cdd9f5; font-size: .95rem; }
+
+/* ---------- Landing: CTA banner ---------- */
+.esp-cta-banner {
+    background: linear-gradient(120deg, #f59e0b, #f97316 60%, #fb7185);
+    border-radius: 1.6rem; box-shadow: 0 .8rem 2rem rgba(245, 158, 11, .3);
+}
+
 /* ---------- Student dashboard ---------- */
 .esp-dash-hero {
     background: linear-gradient(120deg, var(--esp-primary-deep), var(--esp-primary) 55%, #2f7de9);
@@ -200,6 +215,25 @@ body {
 .esp-lesson-row:last-child { border-bottom: 0; }
 a.esp-lesson-row:hover { background: var(--esp-sky-soft); }
 .esp-lesson-row h6 { font-weight: 800; margin-bottom: .15rem; }
+
+/* ---------- Student dashboard: weekly activity chart ---------- */
+.esp-week-chart { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding-top: 8px; }
+.esp-week-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.esp-week-bar .col {
+    width: 100%; max-width: 44px; border-radius: 8px 8px 4px 4px;
+    background: linear-gradient(180deg, #3b82f6, var(--esp-primary));
+    min-height: 6px; position: relative;
+    display: flex; align-items: flex-start; justify-content: center;
+}
+.esp-week-bar .col .n {
+    font-size: .7rem; font-weight: 900; color: #fff; padding-top: 4px;
+}
+.esp-week-bar.today .col {
+    background: linear-gradient(180deg, var(--esp-amber), #f97316);
+    box-shadow: 0 0 12px rgba(245, 158, 11, .45);
+}
+.esp-week-bar .lbl { font-size: .72rem; font-weight: 800; color: var(--esp-muted); }
+.esp-week-bar.today .lbl { color: #b45309; }
 
 /* ---------- Tables (management style) ---------- */
 .esp-table { background: #fff; border-radius: var(--esp-radius); overflow: hidden; }

@@ -48,7 +48,7 @@
     </div>
 </div>
 
-<div class="row mb-4">
+<div class="row mb-5">
     <div class="col-lg-10 mx-auto">
         <div class="card esp-card esp-how-card">
             <div class="card-body p-4 p-lg-5">
@@ -69,5 +69,67 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="esp-stats-band mb-5">
+    <div class="row g-4 text-center">
+        <div class="col-4">
+            <div class="esp-stats-band-num">{{ stat_students }}</div>
+            <div class="esp-stats-band-label">Học sinh</div>
+        </div>
+        <div class="col-4">
+            <div class="esp-stats-band-num">{{ stat_lessons }}</div>
+            <div class="esp-stats-band-label">Bài học</div>
+        </div>
+        <div class="col-4">
+            <div class="esp-stats-band-num">{{ stat_attempts }}</div>
+            <div class="esp-stats-band-label">Lượt luyện nói</div>
+        </div>
+    </div>
+</div>
+
+<h3 class="fw-bold text-center mb-1">Dành cho tất cả mọi người</h3>
+<p class="text-muted text-center mb-4">Mỗi vai trò có một góc nhìn riêng, cùng hướng tới mục tiêu chung.</p>
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body p-4 text-center">
+                <div class="esp-icon-tile esp-tile-amber mb-3">&#127891;</div>
+                <h5 class="fw-bold">Học sinh</h5>
+                <p class="text-muted">Luyện nói mỗi ngày, theo dõi streak và tiến bộ của chính mình.</p>
+                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-warm" style="padding:.55rem 1.4rem;font-size:.9rem;">Bắt đầu học</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body p-4 text-center">
+                <div class="esp-icon-tile esp-tile-blue mb-3">&#128104;&#8205;&#127979;</div>
+                <h5 class="fw-bold">Giáo viên</h5>
+                <p class="text-muted">Tạo lớp học, giao bài và theo dõi từng học sinh trong lớp.</p>
+                {% if user.role == 'teacher' or user.role == 'admin' %}
+                <a href="{% url 'manage_center' %}" class="esp-btn esp-btn-primary" style="padding:.55rem 1.4rem;font-size:.9rem;">Quản lý lớp</a>
+                {% else %}
+                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary" style="padding:.55rem 1.4rem;font-size:.9rem;">Vào Dashboard</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card esp-card esp-card-hover h-100">
+            <div class="card-body p-4 text-center">
+                <div class="esp-icon-tile esp-tile-green mb-3">&#128106;</div>
+                <h5 class="fw-bold">Phụ huynh</h5>
+                <p class="text-muted">Đồng hành cùng con, nắm rõ tiến độ học tập mỗi tuần.</p>
+                <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-primary" style="padding:.55rem 1.4rem;font-size:.9rem;background:linear-gradient(135deg,#16a34a,#4ade80);box-shadow:0 .5rem 1.2rem rgba(22,163,74,.35);">Xem tiến độ</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="esp-cta-banner p-4 p-lg-5 mb-4 text-center">
+    <h3 class="fw-bold text-white mb-2">Sẵn sàng luyện nói hôm nay chưa? &#127908;</h3>
+    <p class="mb-4" style="color:#ffe9c7;">Chỉ cần 10 phút mỗi ngày — sự trôi chảy đến từ sự kiên trì.</p>
+    <a href="{% url 'dashboard' %}" class="esp-btn esp-btn-light">Vào luyện tập ngay &#8594;</a>
 </div>
 {% endblock %}

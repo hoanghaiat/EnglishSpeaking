@@ -47,6 +47,23 @@
     </div>
 </div>
 
+<div class="card esp-card mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold mb-0">&#128200; Hoạt động 7 ngày qua</h5>
+            <span class="esp-pill esp-pill-amber">Hôm nay: {{ week_activity.6.count }} lượt</span>
+        </div>
+        <div class="esp-week-chart">
+            {% for d in week_activity %}
+            <div class="esp-week-bar{% if d.is_today %} today{% endif %}">
+                <div class="col" style="height:{{ d.height }}%;">{% if d.count %}<span class="n">{{ d.count }}</span>{% endif %}</div>
+                <div class="lbl">{{ d.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card esp-card h-100">

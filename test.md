@@ -10,7 +10,21 @@ dung chính, kết quả test tự động, kiểm thử thủ công (nếu có)
 
 ---
 
-## <next> — Redesign UI batch 1: design system + trang chủ + dashboard học sinh (2026-10-16)
+## <next> — Redesign UI batch 1.5: home thêm nhịp điệu + biểu đồ tuần dashboard HS (2026-10-16)
+
+Theo feedback của Hoàng ("bố cục còn hơi đơn điệu").
+- `home`: dải số liệu (học sinh / bài học / lượt luyện nói, số liệu thật),
+  3 thẻ vai trò (Học sinh / Giáo viên / Phụ huynh) với nút theo role,
+  banner CTA cam "Sẵn sàng luyện nói hôm nay chưa?".
+- `dashboard_student`: biểu đồ cột "Hoạt động 7 ngày qua" (số lượt/ngày,
+  hôm nay highlight cam).
+- `views`: `home` thêm 3 stats; dashboard student thêm `week_activity`.
+- 2 tests mới (DashboardRedesignTests).
+- `manage.py check`: no issues.
+- Targeted tests: PermissionMatrix + DashboardEdge (13 tests) OK;
+  DashboardRedesignTests (2 tests) OK. Full suite chưa chạy lại sau batch
+  này (bị gián đoạn) — sẽ chạy bù trước khi push.
+- Thủ công (headless Chromium): cả 2 trang render đúng, không lỗi JS.
 
 Theo mockup Hoàng duyệt (tone xanh dương, thân thiện với THCS).
 - `static/css/esp-theme.css` mới: design system (màu brand, font Nunito,

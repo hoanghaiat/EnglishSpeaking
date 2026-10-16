@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.db.models import Max
+from django.utils import timezone
+from datetime import timedelta
 from .changelog import changelog_for, log_change
 from .models import (
     User, StudentProfile, TeacherProfile, ParentProfile,
@@ -31,7 +33,11 @@ def _profile_or_none(user, relation):
 
 @login_required
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'home.html', {
+        'stat_students': StudentProfile.objects.count(),
+        'stat_lessons': Lesson.objects.count(),
+        'stat_attempts': SpeakingAttempt.objects.count(),
+    })
 
 
 @login_required
@@ -75,12 +81,29 @@ def dashboard(request):
         recent_attempts = SpeakingAttempt.objects.filter(
             student=student_profile).select_related(
                 'exercise__lesson').order_by('-created_at')[:5]
+        # Attempts per day for the last 7 days (for the weekly chart).
+        today = timezone.localdate()
+        vn_weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+        week_activity = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            count = SpeakingAttempt.objects.filter(
+                student=student_profile, created_at__date=day).count()
+            week_activity.append({
+                'label': vn_weekdays[day.weekday()],
+                'count': count,
+                'is_today': i == 0,
+            })
+        max_count = max([d['count'] for d in week_activity] + [1])
+        for d in week_activity:
+            d['height'] = round(d['count'] / max_count * 100)
         return render(request, 'dashboard_student.html', {
             'student': student_profile,
             'assigned_lessons': assigned_lessons,
             'attempt_count': SpeakingAttempt.objects.filter(
                 student=student_profile).count(),
             'recent_attempts': recent_attempts,
+            'week_activity': week_activity,
         })
 
     elif user.role == 'parent':

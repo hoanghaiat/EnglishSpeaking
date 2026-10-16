@@ -1330,3 +1330,34 @@ class ManageGroupingTests(TestCase):
         par2 = html.find('g_par2', s2)
         self.assertLess(par1, s2)
         self.assertGreater(par2, s2)
+
+
+class DashboardRedesignTests(TestCase):
+    """Redesigned home + student dashboard expose the new context data."""
+
+    def setUp(self):
+        self.admin = make_user('r_adm', 'admin', is_staff=True, is_superuser=True)
+        self.student = make_user('r_stu', 'student')
+        self.sp = StudentProfile.objects.create(user=self.student)
+
+    def test_home_shows_platform_stats(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('home'))
+        self.assertEqual(r.status_code, 200)
+        for key in ('stat_students', 'stat_lessons', 'stat_attempts'):
+            self.assertIn(key, r.context)
+        html = r.content.decode()
+        self.assertIn('esp-stats-band', html)
+        self.assertIn('Dành cho tất cả mọi người', html)
+
+    def test_student_dashboard_week_activity(self):
+        self.client.force_login(self.student)
+        r = self.client.get(reverse('dashboard'))
+        self.assertEqual(r.status_code, 200)
+        week = r.context['week_activity']
+        self.assertEqual(len(week), 7)
+        self.assertTrue(week[-1]['is_today'])
+        self.assertTrue(all('height' in d and 'label' in d for d in week))
+        html = r.content.decode()
+        self.assertIn('esp-week-chart', html)
+        self.assertIn('Hoạt động 7 ngày qua', html)
