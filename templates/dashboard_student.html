@@ -168,11 +168,8 @@
                                         <small class="text-muted"><em>"{{ ex.expected_text|truncatechars:80 }}"</em></small>
                                     {% endif %}
                                 </div>
-                                {% if att %}
-                                    <a href="{% url 'update_speaking_attempt' attempt_id=att.id %}" class="btn btn-sm btn-outline-secondary">&#9999; Sửa</a>
-                                {% endif %}
                                 <button class="btn btn-sm {% if att %}btn-outline-primary{% else %}btn-primary{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#ex-form-{{ p.lesson.id }}-{{ ex.id }}" aria-expanded="false">
-                                    {% if att %}Nộp lại{% else %}Ghi âm &amp; nộp{% endif %}
+                                    {% if att %}&#9999; Sửa bài{% else %}Ghi âm &amp; nộp{% endif %}
                                 </button>
                             </div>
                             <div class="collapse mt-3" id="ex-form-{{ p.lesson.id }}-{{ ex.id }}">
